@@ -1,0 +1,548 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Outlanders Armor Forge</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: smithy workbench — control strip on top, optimizer (left) feeds the loadout builder (right), per-rarity ladder below. */
+:root{
+  --bg:#f3f1ec; --panel:#fbfaf7; --ink:#22201c; --muted:#6b665c; --line:#d9d4c8;
+  --accent:#a8641c; --accent-ink:#ffffff; --accent-soft:#f1e3cf;
+  --good:#2f7a4b; --warn:#a36a00;
+  --fire:#c2410c; --water:#1d6fb8; --thunder:#a67c00; --ice:#3b8fa8; --dragon:#7a3fa0;
+  --display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --body:"IBM Plex Sans",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#17161a; --panel:#201f24; --ink:#ece8df; --muted:#a39d91; --line:#36343b;
+  --accent:#e0913f; --accent-ink:#1a1209; --accent-soft:#3a2a18;
+  --good:#5cc183; --warn:#e3a93a;
+  --fire:#f07a45; --water:#5aa9ee; --thunder:#e5c04a; --ice:#6cc6dd; --dragon:#b886e0;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#17161a; --panel:#201f24; --ink:#ece8df; --muted:#a39d91; --line:#36343b;
+  --accent:#e0913f; --accent-ink:#1a1209; --accent-soft:#3a2a18;
+  --good:#5cc183; --warn:#e3a93a;
+  --fire:#f07a45; --water:#5aa9ee; --thunder:#e5c04a; --ice:#6cc6dd; --dragon:#b886e0;
+  color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:20px}
+h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:.01em;text-wrap:balance;margin:0}
+h1{font-size:2.1rem;line-height:1}
+h2{font-size:1.35rem;text-transform:uppercase;letter-spacing:.06em}
+.lede{color:var(--muted);margin:4px 0 0;max-width:68ch}
+.eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+header.top{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between;border-bottom:2px solid var(--ink);padding-bottom:14px}
+.cap{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label,.lbl{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+input[type=number],select{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:7px 9px;min-width:0}
+input[type=number]{width:84px;font-family:var(--mono)}
+select:focus-visible,input:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.rarity-badge{font-family:var(--display);font-size:1.6rem;font-weight:700;line-height:1;padding:6px 12px;border:2px solid var(--accent);color:var(--accent);border-radius:6px;font-variant-numeric:tabular-nums}
+.grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:20px}
+@media (max-width:880px){.grid{grid-template-columns:minmax(0,1fr)}}
+section.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+button{font:inherit;cursor:pointer;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:6px 11px}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+.chip{display:inline-flex;align-items:center;gap:6px}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;background:var(--muted)}
+.prio{display:grid;grid-template-columns:minmax(0,1fr) 110px;gap:8px}
+.results{display:flex;flex-direction:column;gap:10px;max-height:min(620px,65vh);overflow-y:auto;overscroll-behavior:contain;padding-right:6px;scrollbar-gutter:stable}
+.results:empty{display:none}
+.results .res{flex-shrink:0}
+.res{border:1px solid var(--line);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:6px;background:var(--bg)}
+.res.best{border-color:var(--accent)}
+.res-head{display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap}
+.res-head strong{font-family:var(--display);font-size:1.1rem;letter-spacing:.02em}
+.pieces{font-size:.85rem;color:var(--muted)}
+.tags{display:flex;flex-wrap:wrap;gap:5px}
+.tag{font-family:var(--mono);font-size:.72rem;padding:2px 7px;border-radius:4px;background:var(--accent-soft);color:var(--ink);white-space:nowrap}
+.tag.hi{background:var(--accent);color:var(--accent-ink)}
+.slots{display:flex;flex-direction:column;gap:8px}
+.slot{display:grid;grid-template-columns:62px minmax(0,1fr);gap:10px;align-items:start}
+.slot .lbl{padding-top:9px}
+.slot select{width:100%}
+.slot .sk{grid-column:2;font-size:.78rem;color:var(--muted);margin-top:-2px}
+.prog{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.step{display:inline-flex;gap:5px;align-items:baseline;white-space:nowrap}
+.step b{font-family:var(--mono);font-size:.7rem;font-weight:500;padding:1px 5px;border-radius:3px;background:var(--accent-soft);color:var(--ink)}
+.step.locked{opacity:.5}
+.step.locked b{background:transparent;border:1px dashed var(--muted)}
+.step.up span{color:var(--accent);font-weight:600}
+.dbbar{display:flex;flex-wrap:wrap;gap:8px}
+.dbbar input[type=search]{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:7px 9px;flex:1 1 220px;min-width:0}
+.dbwrap{max-height:min(640px,70vh);overflow:auto;border:1px solid var(--line);border-radius:8px}
+.dbwrap thead th{position:sticky;top:0;background:var(--panel);z-index:1}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.78rem;color:var(--muted)}
+table{border-collapse:collapse;width:100%;font-size:.86rem}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:500}
+td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden;min-width:60px}
+.bar i{display:block;height:100%;background:var(--accent)}
+.scroll{overflow-x:auto}
+.setline{font-size:.82rem;display:flex;flex-direction:column;gap:3px}
+.on{color:var(--good);font-weight:600}
+.off{color:var(--muted)}
+.note{font-size:.8rem;color:var(--muted);max-width:80ch}
+.empty{color:var(--muted);font-style:italic}
+tr.cur td{background:var(--accent-soft)}
+@media (prefers-reduced-motion:no-preference){.res{transition:border-color .15s}}
+.reqs{display:flex;flex-direction:column;gap:8px}
+.req{display:grid;grid-template-columns:minmax(0,1fr) 86px auto;gap:8px}
+.tag.miss{background:transparent;border:1px solid var(--warn);color:var(--warn)}
+.free{color:var(--accent);font-style:italic}
+.verdict{border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.verdict.ok{background:color-mix(in srgb,var(--good) 14%,transparent);border:1px solid var(--good)}
+.verdict.no{background:color-mix(in srgb,var(--warn) 12%,transparent);border:1px solid var(--warn)}
+[hidden]{display:none!important}
+.req{position:relative}
+.pick{display:flex;align-items:center;gap:8px;text-align:left;background:var(--panel);min-width:0}
+.pick .pname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kind{font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;padding:1px 5px;border-radius:3px;background:var(--accent-soft);color:var(--ink)}
+.kind.set{background:var(--good);color:var(--panel)}
+.pcs{align-self:center;font-family:var(--mono);font-size:.8rem;color:var(--muted);text-align:center}
+.picker{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:20;background:var(--panel);border:1px solid var(--accent);border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.25);padding:8px;display:flex;flex-direction:column;gap:6px}
+.ptabs{display:flex;gap:4px}
+.ptabs button{flex:1;padding:5px}
+.ptabs button[aria-selected=true]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.pq{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:7px 9px}
+.plist{list-style:none;margin:0;padding:0;max-height:240px;overflow-y:auto;overscroll-behavior:contain}
+.plist li[data-k]{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 8px;padding:6px 8px;border-radius:5px;cursor:pointer}
+.plist li[aria-selected=true]{background:var(--accent-soft)}
+.plist .pn{font-weight:500}
+.plist .ps{font-family:var(--mono);font-size:.68rem;color:var(--muted);align-self:center}
+.plist .pd{grid-column:1/-1;font-size:.74rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pdesc{border-top:1px solid var(--line);padding-top:6px;font-size:.8rem;display:flex;flex-direction:column;gap:2px;min-height:3.2em;max-height:220px;overflow-y:auto}
+.eff mark,.cmp mark{background:var(--accent);color:var(--accent-ink);border-radius:3px;padding:0 3px;font-weight:600}
+.eff .grp{opacity:.55}
+.eff .grp.in{opacity:1}
+.eff .lvlab{font-family:var(--mono);font-size:.7rem}
+.cmp{font-family:var(--mono);font-size:.76rem;margin-top:4px;padding:5px 7px;border-radius:5px;background:var(--accent-soft);word-break:break-word}
+.lvls{list-style:none;margin:4px 0 0;padding:0;display:flex;flex-direction:column;gap:2px}
+.lvls li{display:grid;grid-template-columns:38px minmax(0,1fr);gap:6px;padding:2px 4px;border-radius:4px}
+.lvls li b{font-family:var(--mono);font-size:.7rem;font-weight:500;color:var(--muted);padding-top:1px}
+.lvls li.now{background:var(--accent-soft)}
+.req .hint{grid-column:1/-1;font-size:.76rem;color:var(--muted);margin-top:-3px}
+.verdict button{margin-top:4px;align-self:flex-start}
+
+/* Phone layout: stack rows and turn tables into cards so nothing scrolls sideways */
+@media (max-width:640px){
+  h1{font-size:1.8rem}
+  section.panel{padding:14px}
+  .req{grid-template-columns:minmax(0,1fr) auto}
+  .req .pick{grid-column:1/-1}
+  .req select,.req button,.req .pcs{min-height:40px}
+  .pick{min-height:42px}
+  .slot{grid-template-columns:minmax(0,1fr);gap:4px}
+  .slot .lbl{padding-top:0}
+  .slot .sk{grid-column:1}
+  .slot select{min-height:42px}
+  .scroll{overflow-x:visible}
+  #totals thead,#db thead,#ladder thead{display:none}
+  #totals tr,#db tr,#ladder tr{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:10px 4px;border-bottom:1px solid var(--line)}
+  #totals td,#db td,#ladder td{border:0;padding:0}
+  #totals td:nth-child(1){flex:1 1 auto;min-width:0}
+  #totals td:nth-child(3){flex:0 0 64px}
+  #totals td:nth-child(4){flex:1 1 100%}
+  #db td:nth-child(1){flex:1 1 100%;font-size:1rem}
+  #db td:nth-child(2),#db td:nth-child(3),#db td:nth-child(4){font-size:.8rem;color:var(--muted)}
+  #db td:nth-child(4)::before{content:"from "}
+  #db td:nth-child(5){flex:1 1 100%;margin-top:2px}
+  #ladder td:nth-child(4){flex:1 1 100%}
+  tr.cur{background:var(--accent-soft)}
+  tr.cur td{background:transparent}
+  .dbwrap{max-height:70vh}
+  .plist{max-height:min(300px,40vh)}
+  .res-head button,.results button{min-height:38px}
+}
+.cap.incard{padding-bottom:14px;border-bottom:1px solid var(--line)}
+.cap.incard input[type=number]{width:96px}
+@media (max-width:640px){.cap.incard{display:grid;grid-template-columns:96px minmax(0,1fr) auto;align-items:end}.cap.incard select{width:100%}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Monster Hunter Outlanders · Fated Adventurer</div>
+      <h1>Outlanders Armor Forge</h1>
+      <p class="lede">Set the skill levels you need. The search checks every armor mix you can upgrade to at your rarity cap and lists each set that hits all of them. If none can, it shows the closest sets you can actually make and the rarity where an exact match opens up.</p>
+    </div>
+  </header>
+
+  <div class="grid">
+    <section class="panel" aria-labelledby="opt-h">
+      <h2 id="opt-h">Set search</h2>
+      <div class="cap incard">
+        <div class="field"><label for="ar">Your AR</label><input id="ar" type="number" min="1" max="60" value="32"></div>
+        <div class="field"><label for="rar">Max rarity</label><select id="rar"></select></div>
+        <div class="rarity-badge" id="rbadge" title="Max upgrade rarity">R7</div>
+      </div>
+      <div class="field"><span class="lbl">Required skills &amp; set effects</span>
+        <div id="reqs" class="reqs"></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button id="addreq">+ Add skill</button>
+          <button id="addset">+ Add set effect</button>
+          <button id="clearreq">Clear</button>
+        </div>
+      </div>
+      <div class="field"><span class="lbl">Quick add (max level)</span><div class="presets" id="presets"></div></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button class="primary" id="run">Search</button>
+        <span class="note" id="runinfo"></span>
+      </div>
+      <div id="verdict"></div>
+      <div class="field" id="sortbox" hidden><label for="sort">Sort results</label>
+        <select id="sort">
+          <option value="close">Closest to your levels</option>
+          <option value="free">Most free slots first</option>
+          <option value="extra">Most bonus skills first</option>
+        </select></div>
+      <div class="results" id="results"></div>
+      <button id="more" hidden>Show more sets</button>
+    </section>
+
+    <section class="panel" aria-labelledby="b-h">
+      <h2 id="b-h">Loadout builder</h2>
+      <p class="note" style="margin:0">Load a result, then fill any free slot with whatever piece you like. Requirements you set are checked live.</p>
+      <div class="slots" id="slots"></div>
+      <div id="reqcheck" class="tags"></div>
+      <div class="setline" id="setline"></div>
+      <div class="scroll"><table id="totals"><thead><tr><th>Skill</th><th>Lv</th><th style="width:16%">vs max</th><th>Effect</th></tr></thead><tbody></tbody></table></div>
+    </section>
+  </div>
+
+  <section class="panel" aria-labelledby="db-h">
+    <h2 id="db-h">Armor database</h2>
+    <p class="note" style="margin:0">Every piece and the rarity where each skill level unlocks. Steps above your rarity cap are faded.</p>
+    <div class="legend"><span class="step"><b>R5</b><span>unlocked at your cap</span></span><span class="step locked"><b>R9</b><span>needs a higher rarity</span></span><span class="step up"><b>R8</b><span>level-up of a skill it already has</span></span></div>
+    <div class="dbbar">
+      <input id="dbq" type="search" placeholder="Search set, piece or skill (e.g. Fire Damage Up)" aria-label="Search armor">
+      <select id="dbslot" aria-label="Slot"><option value="">All slots</option><option value="head">Head</option><option value="chest">Chest</option><option value="arms">Arms</option><option value="waist">Waist</option><option value="legs">Legs</option></select>
+      <select id="dbavail" aria-label="Availability"><option value="">All rarities</option><option value="cap">Usable at my cap</option></select>
+    </div>
+    <div class="dbwrap"><table id="db"><thead><tr><th>Piece</th><th>Set</th><th>Slot</th><th>From</th><th>Skills by rarity</th></tr></thead><tbody></tbody></table></div>
+    <p class="note" id="dbcount" style="margin:0"></p>
+  </section>
+
+  <section class="panel" aria-labelledby="lad-h">
+    <h2 id="lad-h">Sets found at every rarity</h2>
+    <p class="note" style="margin:0">For your current levels. Where no exact set exists, the closest one is shown. Your rarity cap is highlighted.</p>
+    <div class="scroll"><table id="ladder"><thead><tr><th>Rarity</th><th>Unlocked at</th><th>Result</th><th>Example / closest set</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <p class="note">Data: Game8 armor set pages for all 36 launch sets (updated Oct 31 2026, after the Oct 29 global launch), skill max levels from GameWith. Assumes any piece can be upgraded up to your rarity cap. Slots were inferred from piece names. Weapon and Visage skills are not included, so a set the search calls impossible may still work with the right weapon. Closed-beta data is not used. "Free slot" means any piece works there; the listed sets use the fewest pieces needed.</p>
+</div>
+
+<script>
+const DATA = {"sets":[{"s":"Adventurers' Guild","u":"https://game8.co/games/Monster-Hunter-Outlanders/archives/636154","k":{"n":"Guild's Comeback","p":2,"e":"Adversity +1: Each time health is depleted, damage dealt and defense are multiplied by 1.1x and defense +10 for the rest of the hunt (up to 2 times).","g":[["Adversity",1]]},"pc":[["Guild Helm","head",2,[["Guild Might - Helm",1,null],["Recovery Booster",1,5]]],["Guild Mail","chest",2,[["Guild Might - Mail",1,null],["Blessing",1,5]]],["Guild Gauntlets","arms",2,[["Guild Might - Gauntlets",1,null],["Blessing",1,5]]],["Guild Coil","waist",2,[["Guild Might - Coil",1,null],["Blessing",1,5]]],["Guild Greaves","legs",2,[["Guild Might - Greaves",1,null],["Quick-Bite",1,5]]]]},{"s":"Kulu-Ya-Ku","u":"https://game8.co/games/Monster-Hunter-Outlanders/archives/636157","k":{"n":"Kulu-Ya-Ku Flash Attack","p":2,"e":"Instinct +1: Prevents attacks from being deflected.","g":[["Instinct",1]]},"pc":[["Kulu Headpiece","head",1,[["Insight",1,null],["Carve Master",1,5],["Insight",2,7]]],["Kulu Mail","chest",1,[["Weakspot Exploit",1,null],["Fire Resistance",1,5],["Thrifty Meal",1,7]]],["Kulu Vambraces","arms",1,[["Item Master",1,null],["Insight",1,5],["Recovery Booster",1,7]]],["Kulu Coil","waist",1,[["Fire Resistance",1,null],["Combo Enhancement",1,5],["Weakspot Exploit",1,7],["Combo Enhancement",2,9]]],["Kulu Greaves","legs",1,[["Demonic Strength",1,null],["Item Master",1,5],["Weakspot Exploit",1,7],["Demonic Strength",2,9]]]]},{"s":"Great Jagras","u":"https://game8.co/games/Monster-Hunter-Outlanders/archives/636161","k":{"n":"Great Jagras Resistance","p":2,"e":"Stun Resistance +1: Shortens the duration of stun by 60%.","g":[["Stun Resistance",1]]},"pc":[["Jagras Helm","head",1,[["Stun Resistance",1,null],["Bento Lover",1,5],["Fearless",1,7],["Bento Lover",2,9]]],["Jagras Mail","chest",1,[["Fearless",1,null],["Stun Resistance",1,5],["Deterrence",1,7]]],["Jagras Vambraces","arms",1,[["Spirit Bind Blade",1,null],["Deterrence",1,5],["Spirit Bind Blade",2,7],["Relentless Pursuit",1,9]]],["Jagras Coil","waist",1,[["Flash Draw",1,null],["Thrifty Meal",1,5]]],["Jagras Greaves","legs",1,[["Bento Lover",1,null],["Deterrence",1,5],["Adversity",1,7]]]]},{"s":"Jyuratodus","u":"https://game8.co/games/Monster-Hunter-Outlanders/archives/636167","k":{"n":"Jyuratodus Aquaguard","p":3,"e":"Water Damage Up +1: Water damage +3% (+8% instead against Radiant monsters).","g":[["Water Damage Up",1]]},"pc":[["Jyura Helm","head",2,[["Unleashed",1,null],["Water Damage Up",1,5],["Health Recovery",1,7],["Water Damage Up",1,9]]],["Jyura Mail","chest",2,[["Water Damage Up",1,null],["Ice Resistance",1,5],["Health Boost",1,7]]],["Jyura Vambraces","arms",2,[["Unleashed",1,null],["Charge Up",1,5],["Ice Resistance",1,7],["Charge Up",2,9]]],["Jyura Coil","waist",2,[["Charge Up",1,null],["Ice Resistance",1,5],["Health Recovery",1,7]]],["Jyura Greaves","legs",2,[["Unleashed",1,null],["Suppression Recovery",1,5],["Health Recovery",1,7]]]]},{"s":"Great Girros","u":"https://game8.co/games/Monster-Hunter-Outlanders/archives/636170","k":{"n":"Great Girros Ambush","p":5,"e":"Thunder Damage Up +1: Thunder damage +3% (+8% instead against Radiant monsters).","g":[["Thunder Damage Up",1]]},"pc":[["Girros Mask","head",2,[["Critical Element",1,null],["Paralysis Resistance",1,5],["Critical Element",2,7]]],["Girros Mail","chest",2,[["Thunder Damage Up",1,null],["Improviser",1,5],["Health Boost",1,7]]],["Girros Vambraces","arms",2,[["Thunder Damage Up",1,null],["Deterrence",1,5],["Thunder Damage Up",2,7],["Unleashed",1,9]]],["Girros Coil","waist",2,[["Relentless Pursuit",1,null],["Buddy Boost",1,5],["Relentless Pursuit",2,7]]],["Girros Greaves","legs",2,[["Critical Element",1,null],["Paralysis Resistance",1,5],["Health Boost",1,7]]]]},{"s":"Chainmail","u":"https://game8.co/games/Monster-Hunter-Outlanders/archives/636172","k":{"n":"Coldsteel Craft","p":3,"e":"Ice Damage Up +1: Ice damage +3% (+8% instead against Radiant monsters).","g":[["Ice Damage Up",1]]},"pc":[["Chainmail Headgear","head",1,[["Ice Damage Up",1,null],["Water Resistance",1,5],["Health Recovery",1,7]]],["Chainmail Vest","chest",1,[["Water Resistance",1,null],["Guard Technique",1,5]]],["Chainmail Gloves","arms",1,[["Charge Enhancement",1,null],["Water Resistance",1,5],["Guard Technique",1,7]]],["Chainmail Belt","waist",1,[["Unleashed",1,null],["Ice Damage Up",1,5],["Ice Damage Up",2,7],["Health Recovery",1,9]]],["Chainmail Trousers","legs",1,[["Intimidation",1,null],["Health Recovery",1,5],["Intimidation",2,7],["Unleashed",1,9]]]]},{"s":"Leather","u":"https://game8.co/games/Monster-Hunter-Outlanders/archives/636173","k":{"n":"Compound Fiber","p":2,"e":"Fire Resistance +1: Fire resistance +6","g":[["Fire Resistance",1]]},"pc":[["Leather Headgear","head",1,[["Item Master",1,null],["Recovery Booster",1,5]]],["Leather Vest","chest",1,[["Critical Element",1,null],["Item Master",1,5],["Critical Element",2,7]]],["Leather Gloves","arms",1,[["Piercing Strike",1,null],["Fire Resistance",1,5],["Iron Skin",1,7]]],["Leather Belt","waist",1,[["Fire Resistance",1,null],["Master Climber",1,5]]],["Leather Pants","legs",1,[["Iron Skin",1,null],["Piercing Strike",1,5],["Ballistics",1,7],["Piercing Strike",2,9]]]]},{"s":"Pukei-Pukei","u":"https://game8.co/games/Monster-Hunter-Outlanders/archives/636174","k":{"n":"Pukei-Pukei Tailwhip","p":2,"e":"Poison Resistance +1: Shortens the duration of poison by 30%.","g":[["Poison Resistance",1]]},"pc":[["Pukei Hood","head",1,[["Ballistics",1,null],["Bow Skill Boost",1,5],["Botanical Expert",1,7],["Bow Skill Boost",2,9]]],["Pukei Mail","chest",1,[["Charged Power Shot",1,null],["Improviser",1,5],["Botanical Expert",1,7]]],["Pukei Vambraces","arms",1,[["Battle Spirit",1,null],["Poison Resistance",1,5],["Improviser",1,7]]],["Pukei Coil","waist",1,[["Poison Resistance",1,null],["Charged Power Shot",1,5],["Charged Power Shot",2,7],["Charged Power Shot",3,9]]],["Pukei Greaves","legs",1,[["Battle Spirit",1,null],["Botanical Expert",1,5],["Improviser",1,7]]]]},{"s":"Radiant Barroth","u":"https://game8.co/games/Monster-Hunter-Outlanders/archives/636176","k":{"n":"Barroth's Resolve","p":2,"e":"Guard Technique +1: Reduces stagger while guarding, and slightly reduces the power of the attack blocked.","g":[["Guard Technique",1]]},"pc":[["Radiant Barroth Helm","head",5,[["Guard Technique",1,null],["Capacity Boost",1,null],["Capacity Boost",2,8],["Radiant Sense",1,10]]],["Radiant Barroth Mail","chest",5,[["Guard Technique",2,null],["Stun Resistance",1,8]]],["Radiant Barroth Vambraces","arms",5,[["Stun Resistance",1,null],["Immovable Stance",1,null],["Immovable Stance",2,8],["Battle Spirit",1,10]]],["Radiant Barroth Coil","waist",5,[["Battle Spirit",1,null],["Capacity Boost",1,null],["Defense Up",1,8]]],["Radiant Barroth Greaves","legs",5,[["Pierce",2,null],["Guard Technique",1,8],["Weakspot Follow-Up",1,10]]]]},{"s":"Radiant Kulu-Ya-Ku","u":"https://game8.co/games/Monster-Hunter-Outlanders/archives/636180","k":{"n":"Kulu-Ya-Ku's Skill","p":2,"e":"Insight +1: Affinity +2%.","g":[["Insight",1]]},"pc":[["Radiant Kulu Headpiece","head",5,[["Demonic Strength",2,null],["Item Master",1,7],["Weakspot Exploit",1,9]]],["Radiant Kulu Mail","chest",5,[["Combo Enhancement",1,null],["Insight",1,null],["Grace Under Pressure",1,7]]],["Radiant Kulu Vambraces","arms",5,[["Item Master",1,null],["Fire Resistance",1,null],["Item Master",2,7]]],["Radiant Kulu Coil","waist",5,[["Grace Under Pressure",1,null],["Counter Boost",1,null],["Counter Boost",2,7],["Insight",1,9]]],["Radiant Kulu Greaves","legs",5,[["Fire Resistance",1,null],["Combo Enhancement",1,null],["Combo Enhancement",2,7],["Weakspot Exploit",1,9]]]]},{"s":"Radiant Anjanath","u":"https://game8.co/games/Monster-Hunter-Outlanders/archives/636183","k":{"n":"Anjanath's Wrath","p":2,"e":"Breaker +1: Makes it easier to break large monster parts, with buildup damage to parts multiplied by 1.1x.","g":[["Breaker",1]]},"pc":[["Radiant Anja Helm","head",5,[["Quick-Bite",1,null],["Flash Draw",1,null],["Adversity",1,8]]],["Radiant Anja Mail","chest",5,[["Fire Resistance",1,null],["Health Cycle",1,null],["Health Cycle",2,8]]],["Radiant Anja Vambraces","arms",5,[["Fire Resistance",1,null],["Wrecker",1,null],["Wrecker",2,8],["Breaker",1,10]]],["Radiant Anja Coil","waist",5,[["Breaker",1,null],["Charge Enhancement",1,null],["Quick-Bite",1,8]]],["Radiant Anja Greaves","legs",5,[["Fire Resistance",1,null],["Charge Enhancement",1,null],["Charge Enhancement",2,8],["Hunting Instinct",1,10]]]]},{"s":"Kadachi","u":"https://game8.co/games/Monster-Hunter-Outlanders/archives/636186","k":{"n":"Tobi-Kadachi Thunderplate","p":2,"e":"Thunder Resistance +1: Thunder resistance +6.","g":[["Thunder Resistance",1]]},"pc":[["Kadachi Helm","head",5,[["Deterrence",1,null],["Thunder Damage Up",1,null],["Thunder Damage Up",2,7],["Thunder Damage Up",3,9]]],["Kadachi Mail","chest",5,[["Thunder Resistance",1,null],["Stamina Conversion",1,null],["Stamina Conversion",2,7],["Stamina Conversion",3,9]]],["Kadachi Vambraces","arms",5,[["Thunder Resistance",1,null],["Blessing",1,null],["Blessing",2,7]]],["Kadachi Coil","waist",5,[["Critical Element",1,null],["Thunder Damage Up",1,null],["Deterrence",1,7]]],["Kadachi Greaves","legs",5,[["Unleashed",1,null],["Stamina Conversion",1,null],["Master Climber",1,7]]]]},{"s":"Butterfly","u":"https://game8.co/games/Monster-Hunter-Outlanders/archives/636188","k":{"n":"Butterfly Bond","p":2,"e":"Sleep Resistance +1: Shortens the duration of sleep by 30%.","g":[["Sleep Resistance",1]]},"pc":[["Butterfly Vertex","head",4,[["Airborne",1,null],["Insight",1,6],["Improviser",1,8],["Airborne",2,10]]],["Butterfly Thorax","chest",4,[["Counter Boost",1,null],["Insight",1,6],["Improviser",1,8]]],["Butterfly Brachia","arms",4,[["Sleep Resistance",1,null],["Counter Boost",1,6],["Botanical Expert",1,8]]],["Butterfly Elytra","waist",4,[["Sleep Resistance",1,null],["Honey Harvester",1,6]]],["Butterfly Crura","legs",4,[["Airborne",1,null],["Ballistics",1,6],["Botanical Expert",1,8]]]]},{"s":"King Beetle","u":"https://game8.co/games/Monster-Hunter-Outlanders/archives/636190","k":{"n":"Monocerus Divinity","p":2,"e":"Geo Expert +1: Allows you to gather 1 extra time from bonepiles.","g":[["Geo Expert",1]]},"pc":[["King Beetle Vertex","head",4,[["Stamina Conversion",1,null],["Honey Harvester",1,6],["Sleep Resistance",1,8]]],["King Beetle Thorax","chest",4,[["Blessing",1,null],["Capacity Boost",1,6],["Capacity Boost",2,8],["Capacity Boost",3,10]]],["King Beetle Brachia","arms",4,[["Flawless",1,null],["Ammo Enhancement",1,6],["Blessing",1,8],["Ammo Enhancement",2,10]]],["King Beetle Elytra","waist",4,[["Geo Expert",1,null],["Sleep Resistance",1,6]]],["King Beetle Crura","legs",4,[["Capacity Boost",1,null],["Geo Expert",1,6],["Blessing",1,8]]]]},{"s":"High Metal","u":"https://game8.co/games/Monster-Hunter-Outlanders/archives/636194","k":{"n":"Silence of the Veins","p":2,"e":"Roar Resistance +1: Reduces the effects of weak monster roars.","g":[["Roar Resistance",1]]},"pc":[["High Metal Helm","head",4,[["Roar Resistance",1,null],["Gathering Master",1,6]]],["High Metal Mail","chest",4,[["Ice Damage Up",1,null],["Defense Up",1,6],["Ice Damage Up",2,8],["Ice Damage Up",3,10]]],["High Metal Braces","arms",4,[["Ice Resistance",1,null],["Morph Boost",1,6],["Morph Boost",2,8],["Relentless Pursuit",1,10]]],["High Metal Coil","waist",4,[["Morph Boost",1,null],["Relentless Pursuit",1,6],["Defense Up",1,8],["Morph Boost",2,10]]],["High Metal Greaves","legs",4,[["Roar Resistance",1,null],["Ice Damage Up",1,6],["Relentless Pursuit",1,8],["Ice Damage Up",2,10]]]]},{"s":"Hornetaur","u":"https://game8.co/games/Monster-Hunter-Outlanders/archives/636195","k":{"n":"Hornetaur Might","p":2,"e":"Dragon Resistance +1: Dragon resistance +6.","g":[["Dragon Resistance",1]]},"pc":[["Hornetaur Helm","head",4,[["Dragon Resistance",1,null],["Unflinching Carver",1,6]]],["Hornetaur Mail","chest",4,[["Bento Lover",1,null],["Weakspot Follow-Up",1,6],["Thrifty Meal",1,8]]],["Hornetaur Vambraces","arms",4,[["Critical Element",1,null],["Dragon Damage Up",1,6],["Dragon Damage Up",2,8],["Health Boost",1,10]]],["Hornetaur Coil","waist",4,[["Dragon Damage Up",1,null],["Weakspot Follow-Up",1,6],["Thrifty Meal",1,8]]],["Hornetaur Greaves","legs",4,[["Dragon Resistance",1,null],["Health Boost",1,6]]]]},{"s":"Radiant Pukei-Pukei","u":"https://game8.co/games/Monster-Hunter-Outlanders/archives/636197","k":{"n":"Pukei-Pukei Territory","p":2,"e":"Flawless +1: Increases damage dealt by 3% when health is full.","g":[["Flawless",1]]},"pc":[["Radiant Pukei Hood","head",4,[["Charged Power Shot",1,null],["Improviser",1,5],["Charged Power Shot",2,7],["Flawless",1,9]]],["Radiant Pukei Mail","chest",4,[["Bow Skill Boost",1,null],["Suppression Recovery",1,5],["Hunting Instinct",1,7],["Bow Skill Boost",2,9]]],["Radiant Pukei Vambraces","arms",4,[["Hunting Instinct",1,null],["Item Master",1,5],["Suppression Recovery",1,7]]],["Radiant Pukei Coil","waist",4,[["Hunting Instinct",1,null],["Stamina Conversion",1,5],["Item Master",1,7]]],["Radiant Pukei Greaves","legs",4,[["Bow Skill Boost",1,null],["Improviser",1,5],["Flawless",1,7],["Bow Skill Boost",2,9]]]]},{"s":"Radiant Great Jagras","u":"https://game8.co/games/Monster-Hunter-Outlanders/archives/636198","k":{"n":"Great Jagras's Roll","p":2,"e":"Insight +1: Affinity +2%.","g":[["Insight",1]]},"pc":[["Radiant Jagras Helm","head",4,[["Charge Up",1,null],["Breaker",1,5],["Insight",1,7]]],["Radiant Jagras Mail","chest",4,[["Charge Up",1,null],["Stun Resistance",1,5],["Charge Up",2,7],["Unleashed",1,9]]],["Radiant Jagras Vambraces","arms",4,[["Insight",1,null],["Bento Lover",1,5],["Insight",2,7]]],["Radiant Jagras Coil","waist",4,[["Bento Lover",1,null],["Thrifty Meal",1,5],["Bento Lover",2,7],["Unleashed",1,9]]],["Radiant Jagras Greaves","legs",4,[["Breaker",1,null],["Stun Resistance",1,5],["Thrifty Meal",1,7]]]]},{"s":"Alloy","u":"https://game8.co/games/Monster-Hunter-Outlanders/archives/636199","k":{"n":"Alloy Barrier","p":2,"e":"Windproof +1: Reduces the effects of minor wind pressure.","g":[["Windproof",1]]},"pc":[["Alloy Helm","head",3,[["Water Resistance",1,null],["Offensive Defense",1,6],["Breaker",1,8],["Offensive Defense",2,10]]],["Alloy Mail","chest",3,[["Immovable Stance",1,null],["Breaker",1,6],["Poison Resistance",1,8]]],["Alloy Vambraces","arms",3,[["Windproof",1,null],["Defense Up",1,6]]],["Alloy Coil","waist",3,[["Windproof",1,null],["Immovable Stance",1,6],["Water Resistance",1,8]]],["Alloy Greaves","legs",3,[["Offensive Defense",1,null],["Defense Up",1,6],["Poison Resistance",1,8]]]]},{"s":"Radiant Rathian","u":"https://game8.co/games/Monster-Hunter-Outlanders/archives/636200","k":{"n":"Rathian's Instinct","p":3,"e":"Radiant Sense +1: Increases adventurer damage by 4% against monsters in Radiant Rage.","g":[["Radiant Sense",1]]},"pc":[["Radiant Rathian Helm","head",3,[["Recovery Booster",1,null],["Flash Draw",1,6],["Flash Draw",2,8],["Flash Draw",3,10]]],["Radiant Rathian Mail","chest",3,[["Radiant Sense",1,null],["Spirit Bind Blade",1,6],["Recovery Booster",1,8],["Spirit Bind Blade",2,10]]],["Radiant Rathian Vambraces","arms",3,[["Airborne",1,null],["Health Boost",1,6],["Poison Resistance",1,8]]],["Radiant Rathian Coil","waist",3,[["Radiant Sense",1,null],["Health Boost",1,6],["Botanical Expert",1,8]]],["Radiant Rathian Greaves","legs",3,[["Flash Draw",1,null],["Hunting Instinct",1,6],["Botanical Expert",1,8],["Flash Draw",2,10]]]]},{"s":"Anjanath","u":"https://game8.co/games/Monster-Hunter-Outlanders/archives/636202","k":{"n":"Anjanath Ember","p":3,"e":"Fire Damage Up +1: Fire Damage +3% (+8% instead against Radiant monsters).","g":[["Fire Damage Up",1]]},"pc":[["Anja Helm","head",3,[["Weakspot Follow-Up",1,null],["Wrecker",1,6],["Quick-Bite",1,8],["Wrecker",2,10]]],["Anja Mail","chest",3,[["Fire Resistance",1,null],["Charge Enhancement",1,6],["Weakspot Follow-Up",1,8],["Charge Enhancement",2,10]]],["Anja Vambraces","arms",3,[["Weakspot Follow-Up",1,null],["Health Cycle",1,6],["Quick-Bite",1,8]]],["Anja Coil","waist",3,[["Fire Damage Up",1,null],["Health Cycle",1,6],["Fire Damage Up",2,8],["Quick-Bite",1,10]]],["Anja Greaves","legs",3,[["Fire Damage Up",1,null],["Health Cycle",1,6],["Adversity",1,8]]]]},{"s":"Vespoid","u":"https://game8.co/games/Monster-Hunter-Outlanders/archives/636203","k":{"n":"Insulation of the Summit","p":2,"e":"Paralysis Resistance +1: Shortens the duration of paralysis by 30%.","g":[["Paralysis Resistance",1]]},"pc":[["Vespoid Helm","head",2,[["Paralysis Resistance",1,null],["Windproof",1,5]]],["Vespoid Mail","chest",2,[["Critical Element",1,null],["Health Boost",1,5]]],["Vespoid Vambraces","arms",2,[["Paralysis Resistance",1,null],["Counter Boost",1,5],["Insight",1,7],["Counter Boost",2,9]]],["Vespoid Coil","waist",2,[["Critical Element",1,null],["Paralysis Resistance",1,5],["Honey Harvester",1,7]]],["Vespoid Greaves","legs",2,[["Counter Boost",1,null],["Health Boost",1,5],["Windproof",1,7]]]]},{"s":"Hunter","u":"https://game8.co/games/Monster-Hunter-Outlanders/archives/636204","k":{"n":"Wilds Mastery","p":2,"e":"Specimen Expert +1: Increases the chance of retaining carves when slaying Insect-Type Small Monsters with attacks.","g":[["Specimen Expert",1]]},"pc":[["Hunter's Headgear","head",2,[["Insight",1,null],["Geo Expert",1,5],["Health Recovery",1,7]]],["Hunter's Mail","chest",2,[["Improviser",1,null],["Ammo Enhancement",1,5],["Ammo Enhancement",2,7],["Weakspot Exploit",1,9]]],["Hunter's Vambraces","arms",2,[["Specimen Expert",1,null],["Health Recovery",1,5]]],["Hunter's Coil","waist",2,[["Ammo Enhancement",1,null],["Geo Expert",1,5],["Ammo Enhancement",2,7],["Weakspot Exploit",1,9]]],["Hunter's Greaves","legs",2,[["Insight",1,null],["Master Climber",1,5]]]]},{"s":"Bone","u":"https://game8.co/games/Monster-Hunter-Outlanders/archives/636206","k":{"n":"Sepulcros Divinity","p":3,"e":"Dragon Damage Up +1: Dragon Damage +3% (+8% instead against Radiant monsters).","g":[["Dragon Damage Up",1]]},"pc":[["Bone Helm","head",2,[["Morph Boost",1,null],["Health Boost",1,5],["Morph Boost",2,7],["Breaker",1,9]]],["Bone Mail","chest",2,[["Dragon Damage Up",1,null],["Health Recovery",1,5],["Health Boost",1,7]]],["Bone Vambraces","arms",2,[["Breaker",1,null],["Specimen Expert",1,5],["Health Recovery",1,7]]],["Bone Coil","waist",2,[["Specimen Expert",1,null],["Health Boost",1,5]]],["Bone Greaves","legs",2,[["Stun Resistance",1,null],["Dragon Damage Up",1,5],["Dragon Damage Up",2,7],["Breaker",1,9]]]]},{"s":"Barroth","u":"https://game8.co/games/Monster-Hunter-Outlanders/archives/636207","k":{"n":"Barroth Mudguard","p":2,"e":"Muck Resistance +1: Reduces limits on movement speed and evasion.","g":[["Muck Resistance",1]]},"pc":[["Barroth Helm","head",2,[["Battle Spirit",1,null],["Immovable Stance",1,5],["Immovable Stance",2,7],["Stun Resistance",1,9]]],["Barroth Mail","chest",2,[["Battle Spirit",1,null],["Pierce",1,5],["Pierce",2,7],["Defense Up",1,9]]],["Barroth Vambraces","arms",2,[["Stun Resistance",1,null],["Guard Technique",1,5]]],["Barroth Coil","waist",2,[["Immovable Stance",1,null],["Defense Up",1,5],["Defense Up",2,7]]],["Barroth Greaves","legs",2,[["Battle Spirit",1,null],["Guard Technique",1,5],["Defense Up",1,7]]]]},{"s":"Ingot","u":"https://game8.co/games/Monster-Hunter-Outlanders/archives/636208","k":{"n":"Ingot Blast Shield","p":2,"e":"Blast Resistance +1: Delays blastblight and reduces blast damage.","g":[["Blast Resistance",1]]},"pc":[["Ingot Helm","head",5,[["Intimidation",2,null],["Windproof",1,7],["Fearless",1,9]]],["Ingot Mail","chest",5,[["Blast Resistance",1,null],["Defense Up",1,null],["Defense Up",2,7]]],["Ingot Vambraces","arms",5,[["Grace Under Pressure",1,null],["Offensive Defense",1,null],["Blast Resistance",1,7]]],["Ingot Coil","waist",5,[["Windproof",1,null],["Offensive Defense",1,null],["Offensive Defense",2,7],["Fearless",1,9]]],["Ingot Greaves","legs",5,[["Defense Up",1,null],["Thunder Damage Up",1,null],["Fearless",1,7],["Thunder Damage Up",2,9]]]]},{"s":"Radiant Jyuratodus","u":"https://game8.co/games/Monster-Hunter-Outlanders/archives/636209","k":{"n":"Jyuratodus Flowmend","p":2,"e":"Water Resistance +1: Water resistance +6.","g":[["Water Resistance",1]]},"pc":[["Radiant Jyura Helm","head",6,[["Flinching-Free",1,null],["Water Resistance",1,null],["Flinching-Free",2,8]]],["Radiant Jyura Mail","chest",6,[["Health Recovery",1,null],["Piercing Strike",1,null],["Piercing Strike",1,8],["Radiant Sense",1,10]]],["Radiant Jyura Vambraces","arms",6,[["Health Recovery",1,null],["Water Damage Up",1,null],["Water Damage Up",2,8],["Hunting Instinct",1,10]]],["Radiant Jyura Coil","waist",6,[["Hunting Instinct",1,null],["Piercing Strike",1,null],["Water Resistance",1,8]]],["Radiant Jyura Greaves","legs",6,[["Radiant Sense",1,null],["Water Damage Up",1,null],["Health Recovery",1,8]]]]},{"s":"Rathian","u":"https://game8.co/games/Monster-Hunter-Outlanders/archives/636226","k":{"n":"Rathian Vigor","p":2,"e":"Health Boost +1 (page: equipping at least 2 armor pieces with the Rathian Vigor Set Effect activates one level of Health Boost).","g":[["Health Boost",1]]},"pc":[["Rathian Helm","head",6,[["Hunting Instinct",1,null],["Spirit Bind Blade",1,null],["Spirit Bind Blade",2,8],["Botanical Expert",1,10]]],["Rathian Mail","chest",6,[["Poison Resistance",1,null],["Airborne",1,null],["Airborne",2,8],["Relentless Pursuit",1,10]]],["Rathian Vambraces","arms",6,[["Botanical Expert",1,null],["Flash Draw",1,null],["Flash Draw",2,8],["Relentless Pursuit",1,10]]],["Rathian Coil","waist",6,[["Flawless",1,null],["Roar Resistance",1,null],["Spirit Bind Blade",1,8],["Spirit Bind Blade",2,10]]],["Rathian Greaves","legs",6,[["Health Boost",1,null],["Roar Resistance",1,null],["Health Boost",2,8]]]]},{"s":"Rathalos","u":"https://game8.co/games/Monster-Hunter-Outlanders/archives/636227","k":{"n":"Rathalos's Weakness","p":3,"e":"Weakspot Exploit +1: Attacks on the monster's weak point have 4% increased affinity.","g":[["Weakspot Exploit",1]]},"pc":[["Rathalos Helm","head",6,[["Breaker",1,null],["Fire Damage Up",1,null],["Deterrence",1,8]]],["Rathalos Mail","chest",6,[["Fire Damage Up",2,null],["Health Cycle",1,8],["Fire Damage Up",3,10]]],["Rathalos Vambraces","arms",6,[["Deterrence",1,null],["Fire Resistance",1,null],["Deterrence",3,8]]],["Rathalos Coil","waist",6,[["Weakspot Exploit",1,null],["Wrecker",1,null],["Fire Resistance",1,8],["Wrecker",1,10]]],["Rathalos Greaves","legs",6,[["Fire Resistance",1,null],["Wrecker",1,null],["Wrecker",2,8],["Breaker",1,10]]]]},{"s":"Diablos","u":"https://game8.co/games/Monster-Hunter-Outlanders/archives/636229","k":{"n":"Diablos's Footing","p":2,"e":"Tremor Resistance +1: Nullifies minor ground tremors.","g":[["Tremor Resistance",1]]},"pc":[["Diablos Helm","head",7,[["Tremor Resistance",2,null],["Defense Up",1,null]]],["Diablos Mail","chest",7,[["Dragon Damage Up",2,null],["Defense Up",1,null],["Dragon Damage Up",3,10]]],["Diablos Vambraces","arms",7,[["Weakspot Follow-Up",1,null],["Guard Technique",1,null],["Bento Lover",1,null],["Bento Lover",2,10]]],["Diablos Coil","waist",7,[["Pierce",1,null],["Guard Technique",1,null],["Weakspot Follow-Up",1,null],["Pierce",2,10]]],["Diablos Greaves","legs",7,[["Bento Lover",2,null],["Defense Up",1,null],["Bento Lover",3,10]]]]},{"s":"Radiant Great Girros","u":"https://game8.co/games/Monster-Hunter-Outlanders/archives/636232","k":{"n":"Great Girros's Command","p":2,"e":"Buddy Boost +1: Multiplies buddy damage by 1.1x.","g":[["Buddy Boost",1]]},"pc":[["Radiant Girros Mask","head",7,[["Paralysis Resistance",1,null],["Radiant Sense",1,null],["Combo Enhancement",1,null]]],["Radiant Girros Mail","chest",7,[["Thunder Damage Up",2,null],["Paralysis Resistance",1,null],["Thunder Damage Up",3,9]]],["Radiant Girros Vambraces","arms",7,[["Combo Enhancement",2,null],["Flinching-Free",1,null],["Combo Enhancement",3,9]]],["Radiant Girros Coil","waist",7,[["Health Recovery",1,null],["Fearless",1,null],["Thunder Damage Up",1,null],["Thunder Damage Up",2,9]]],["Radiant Girros Greaves","legs",7,[["Health Recovery",2,null],["Flinching-Free",1,null]]]]},{"s":"Radiant Kadachi","u":"https://game8.co/games/Monster-Hunter-Outlanders/archives/636244","k":{"n":"Tobi-Kadachi Surge","p":3,"e":"Unleashed +1: 90s after a hunt begins, or after taking 100 total damage, increases affinity by 3% for 180s.","g":[["Unleashed",1]]},"pc":[["Radiant Kadachi Helm","head",7,[["Thunder Resistance",1,null],["Battle Spirit",1,null],["Counter Boost",1,null],["Counter Boost",2,10]]],["Radiant Kadachi Mail","chest",7,[["Adversity",1,null],["Deterrence",2,null]]],["Radiant Kadachi Vambraces","arms",7,[["Thunder Resistance",1,null],["Bow Skill Boost",1,null],["Unleashed",1,null],["Bow Skill Boost",2,10]]],["Radiant Kadachi Coil","waist",7,[["Bow Skill Boost",2,null],["Thunder Resistance",1,null],["Unleashed",1,10]]],["Radiant Kadachi Greaves","legs",7,[["Counter Boost",2,null],["Deterrence",1,null],["Counter Boost",3,10]]]]},{"s":"Baan","u":"https://game8.co/games/Monster-Hunter-Outlanders/archives/636253","k":{"n":"Radobaan's Bulwark","p":2,"e":"Iron Skin +1: Shortens the duration of defense down by 50%.","g":[["Iron Skin",1]]},"pc":[["Baan Helm","head",7,[["Bleeding Resistance",1,null],["Fearless",1,null],["Charge Enhancement",1,null],["Charge Enhancement",2,10]]],["Baan Mail","chest",7,[["Bleeding Resistance",1,null],["Intimidation",1,null],["Fearless",1,null],["Intimidation",2,10]]],["Baan Vambraces","arms",7,[["Charge Enhancement",3,null],["Sleep Resistance",1,10]]],["Baan Coil","waist",7,[["Immovable Stance",2,null],["Sleep Resistance",1,null],["Immovable Stance",3,10]]],["Baan Greaves","legs",7,[["Iron Skin",2,null],["Bleeding Resistance",1,null]]]]},{"s":"Tzitzi-Ya-Ku","u":"https://game8.co/games/Monster-Hunter-Outlanders/archives/636426","k":{"n":"Tzitzi-Ya-Ku's Pursuit","p":3,"e":"Relentless Pursuit +1: After a monster is staggered or suppressed, adventurer damage increases by 4 for 15s.","g":[["Relentless Pursuit",1]]},"pc":[["Tzitzi Headgear","head",8,[["Relentless Pursuit",1,null],["Blessing",1,null],["Piercing Strike",1,null],["Piercing Strike",2,9]]],["Tzitzi Mail","chest",8,[["Water Damage Up",2,null],["Blessing",1,null],["Water Damage Up",3,9]]],["Tzitzi Vambraces","arms",8,[["Piercing Strike",2,null],["Sleep Resistance",1,null],["Piercing Strike",3,9]]],["Tzitzi Coil","waist",8,[["Relentless Pursuit",1,null],["Stun Resistance",1,null],["Water Damage Up",1,null],["Water Damage Up",2,9]]],["Tzitzi Greaves","legs",8,[["Capturing Expert",1,null],["Stun Resistance",1,null],["Blessing",1,null]]]]},{"s":"Pink Rathian","u":"https://game8.co/games/Monster-Hunter-Outlanders/archives/636428","k":{"n":"Pink Rathian's Acuity","p":3,"e":"Hunting Instinct +1: When using an environmental interactive object to inflict negative effects or damage on a monster, increases damage by 4% for 120s.","g":[["Hunting Instinct",1]]},"pc":[["Rath Heart Helm","head",9,[["Fire Damage Up",2,null],["Hunting Instinct",1,null],["Health Boost",1,null]]],["Rath Heart Mail","chest",8,[["Poison Resistance",2,null],["Recovery Booster",1,null]]],["Rath Heart Braces","arms",8,[["Capacity Boost",2,null],["Hunting Instinct",1,null],["Recovery Booster",1,null]]],["Rath Heart Coil","waist",8,[["Capacity Boost",2,null],["Health Boost",1,null],["Insight",1,null]]],["Rath Heart Greaves","legs",8,[["Instinct",1,null],["Spirit Bind Blade",2,null],["Recovery Booster",1,null]]]]},{"s":"Legiana","u":"https://game8.co/games/Monster-Hunter-Outlanders/archives/636429","k":{"n":"Legiana Dance","p":2,"e":"Ice Resistance +1: Ice resistance +6.","g":[["Ice Resistance",1]]},"pc":[["Legiana Helm","head",8,[["Ice Resistance",2,null],["Blessing",1,null]]],["Legiana Mail","chest",8,[["Flash Draw",2,null],["Weakspot Exploit",1,null],["Windproof",1,10]]],["Legiana Vambraces","arms",8,[["Weakspot Exploit",1,null],["Blessing",1,null],["Ice Damage Up",1,null],["Ice Damage Up",2,10]]],["Legiana Coil","waist",8,[["Blessing",2,null],["Ice Damage Up",1,null]]],["Legiana Greaves","legs",8,[["Ammo Enhancement",2,null],["Suppression Recovery",1,null],["Critical Element",1,10]]]]}],"skills":{"Health Boost":[3,"Raises max health"],"Recovery Booster":[3,"Boosts healing from items and interactive health sources"],"Health Recovery":[3,"Speeds healing of recoverable (gray) damage"],"Defense Up":[7,"Raises defense"],"Insight":[7,"Raises affinity"],"Guard Technique":[5,"Shortens guard stagger and reduces guard stamina cost"],"Flawless":[3,"Boosts damage while health is full"],"Fearless":[5,"Boosts damage while recoverable damage is present"],"Unleashed":[5,"Temporarily raises affinity when conditions are met"],"Adversity":[1,"Temporarily boosts damage and defense after each faint, up to 2 times"],"Charge Up":[7,"Boosts damage while stamina stays full for a set time"],"Battle Spirit":[5,"Raises affinity when large monsters enrage or enter Radiant Rage"],"Weakspot Exploit":[3,"Raises affinity on weak points"],"Breaker":[3,"Makes breaking or severing large monster parts easier"],"Offensive Defense":[7,"Boosts damage after a successful Perfect Guard"],"Flinching-Free":[3,"Reduces reactions to minor damage"],"Blessing":[5,"Chance to reduce damage taken"],"Roar Resistance":[3,"Protection against large monster roars"],"Windproof":[3,"Protection against wind pressure"],"Tremor Resistance":[3,"Protection against ground tremors"],"Poison Resistance":[3,"Reduces damage while poisoned"],"Paralysis Resistance":[3,"Shortens paralysis"],"Sleep Resistance":[3,"Shortens sleep"],"Blast Resistance":[3,"Protection against blastblight"],"Stun Resistance":[3,"Shortens stun"],"Bleeding Resistance":[3,"Protection against bleeding"],"Iron Skin":[3,"Protection against Defense Down"],"Fire Damage Up":[7,"Boosts fire damage, more so against Radiant monsters"],"Water Damage Up":[7,"Boosts water damage, more so against Radiant monsters"],"Ice Damage Up":[7,"Boosts ice damage, more so against Radiant monsters"],"Thunder Damage Up":[7,"Boosts thunder damage, more so against Radiant monsters"],"Dragon Damage Up":[7,"Boosts dragon damage, more so against Radiant monsters"],"Critical Element":[3,"Boosts elemental damage on critical hits"],"Fire Resistance":[3,"Raises fire resistance"],"Water Resistance":[3,"Raises water resistance"],"Ice Resistance":[3,"Raises ice resistance"],"Thunder Resistance":[3,"Raises thunder resistance"],"Dragon Resistance":[3,"Raises dragon resistance"],"Instinct":[1,"Prevents attacks from being deflected"],"Ballistics":[1,"Shortens the time for ammo and arrows to reach max power"],"Bow Skill Boost":[4,"Boosts damage of bow Skills 1, 2, and 3"],"Quick-Bite":[3,"Speeds up eating and item use"],"Thrifty Meal":[3,"Chance to use food or drink without consuming it"],"Improviser":[3,"Recovers extra health from environmental interactables"],"Deterrence":[3,"Reduces small monsters attacking after spotting you (not Neopterons)"],"Gathering Master":[1,"Speeds gathering and prevents stagger while gathering"],"Botanical Expert":[3,"Increases herbs and consumables gathered"],"Geo Expert":[3,"Increases uses of a gathering point"],"Honey Harvester":[1,"Increases honey gathered in the field"],"Carve Master":[1,"Allows one extra carve (no effect when joining mid-quest)"],"Carving Pro":[5,""],"Specimen Expert":[3,"Lowers chance small insect monster bodies are destroyed"],"Weakspot Follow-Up":[5,"Chance for an extra hit on broken parts"],"Relentless Pursuit":[3,"Boosts damage after a monster is staggered or suppressed"],"Counter Boost":[7,"Boosts damage after Perfect Evade or Parry"],"Radiant Sense":[5,"Boosts damage against monsters in Radiant Rage"],"Health Cycle":[3,"Recovers health based on damage dealt to broken parts"],"Combo Enhancement":[7,"Boosts damage after consecutive hits (pierce and rupture excluded)"],"Buddy Boost":[1,"Increases buddy damage"],"Bento Lover":[7,"Boosts damage after eating BBQ or a portable meal in combat"],"Master Climber":[1,"Reduces stamina loss when evading on walls or vines"],"Airborne":[7,"Increases airborne attack damage"],"Item Master":[3,"Extends the duration of some item effects"],"Charge Enhancement":[7,"Boosts damage after a charged slash or blunt hit"],"Hunting Instinct":[3,"Temporarily boosts damage while using devices or endemic life"],"Flash Draw":[7,"Boosts damage after a Draw attack"],"Spirit Bind Blade":[4,"Temporarily boosts damage when Spirit Gauge rises"],"Demonic Strength":[4,"Increases damage in Demon Mode"],"Piercing Strike":[7,"Boosts damage after a Pierce attack lands at least 3 hits"],"Charged Power Shot":[7,"Boosts damage while holding a ranged weapon's charge level"],"Immovable Stance":[7,"Boosts damage after triggering ferocity"],"Stamina Conversion":[7,"Boosts damage of attacks that cost stamina"],"Capacity Boost":[7,"Boosts damage after reloading ammo"],"Wrecker":[4,"Boosts damage after staggering or breaking a part with a great sword"],"Pierce":[4,"Boosts damage from consecutive lance hits on the same part"],"Intimidation":[4,"Boosts damage after building stun with a blunt weapon"],"Ammo Enhancement":[4,"Boosts damage of bowgun normal, spread, and pierce ammo"],"Grace Under Pressure":[3,"Increases defense against Radiant monsters in Radiant Rage"],"Suppression Recovery":[3,"Damage to a suppressed monster recovers health"],"Morph Boost":[4,"Boosts damage for a time after the weapon transforms"],"Guild Might - Weapon":[8,"Crimson Crest weapon equipment; rarity scales with Adventurer Rank"],"Guild Might - Helm":[8,""],"Guild Might - Mail":[8,""],"Guild Might - Gauntlets":[8,""],"Guild Might - Coil":[8,""],"Guild Might - Greaves":[8,""]}};
+DATA.levels = {"Health Boost":["Health +10","Health +20","Health +30"],"Recovery Booster":["Health recovery x1.1 when healing","Health recovery x1.2 when healing","Health recovery x1.3 when healing"],"Health Recovery":["Gray health recovery speed x2","Gray health recovery speed x3","Gray health recovery speed x4"],"Defense Up":["Defense +5","Defense +10","Defense +15","Defense +20","Defense +25","Defense +30","Defense +35"],"Insight":["Affinity +2%","Affinity +4%","Affinity +6%","Affinity +8%","Affinity +10%","Affinity +13%","Affinity +16%"],"Guard Technique":["Very slightly decreases attack impact","Slightly decreases attack impact; stamina depletion -15%","Decreases attack impact; stamina depletion -15%","Decreases attack impact; stamina depletion -30%","Greatly decreases attack impact; stamina depletion -50%"],"Flawless":["While active, damage +3%","While active, damage +6%","While active, damage +9%"],"Fearless":["While active, damage +3%","While active, damage +6%","While active, damage +10%","While active, damage +14%","While active, damage +19%"],"Unleashed":["90s into hunt or after 100 total dmg taken: affinity +3% for 180s","90s into hunt or after 100 total dmg taken: affinity +6% for 180s","90s into hunt or after 100 total dmg taken: affinity +9% for 180s","90s into hunt or after 100 total dmg taken: affinity +12% for 180s","90s into hunt or after 100 total dmg taken: affinity +15% for 180s"],"Adversity":["Each faint: damage x1.1 and defense +10"],"Charge Up":["Damage +4% when stamina full for 5s","Damage +8% when stamina full for 5s","Damage +12% when stamina full for 5s","Damage +16% when stamina full for 5s","Damage +20% when stamina full for 5s","Damage +24% when stamina full for 5s","Elemental attack +50; damage +31% when stamina full for 5s"],"Battle Spirit":["While active, affinity +3%","While active, affinity +5%","While active, affinity +7%","While active, affinity +11%","While active, affinity +15%"],"Weakspot Exploit":["Affinity +4% on weak points","Affinity +8% on weak points","Affinity +14% on weak points"],"Breaker":["Part damage x1.1","Part damage x1.2","Part damage x1.3"],"Offensive Defense":["After activation, damage +4% for 30s","After activation, damage +8% for 30s","After activation, damage +12% for 30s","After activation, damage +16% for 30s","After activation, damage +20% for 30s","After activation, damage +24% for 30s","Elemental attack +50; after activation, damage +31% for 30s"],"Flinching-Free":["Prevents knockbacks from minor damage","Prevents knockbacks from minor damage; tripping reduced to knockback","Prevents knockbacks and tripping from minor damage"],"Blessing":["25% chance to reduce damage taken by 15%","25% chance to reduce damage taken by 30%","25% chance to reduce damage taken by 50%","25% chance to reduce damage taken by 60%","40% chance to reduce damage taken by 60%"],"Roar Resistance":["Reduces effects of weak roars","Nullifies weak roars; reduces effects of strong roars","Nullifies weak and strong roars"],"Windproof":["Reduces effects of minor wind pressure","Negates minor wind pressure; reduces major wind pressure","Negates minor and major wind pressure"],"Tremor Resistance":["Nullifies minor ground tremors","Nullifies minor tremors; reduces effects of major tremors","Nullifies minor and major ground tremors"],"Poison Resistance":["Poison duration -30%","Poison duration -60%","Prevents poison"],"Paralysis Resistance":["Paralysis duration -30%","Paralysis duration -60%","Prevents paralysis"],"Sleep Resistance":["Sleep duration -30%","Sleep duration -60%","Prevents sleep"],"Blast Resistance":["Delays blastblight and reduces blast damage","Greatly delays blastblight and greatly reduces blast damage","Prevents blastblight"],"Stun Resistance":["Stun duration -60%","Stun duration -90%","Prevents stun"],"Bleeding Resistance":["Reduces damage while bleeding","Greatly reduces damage while bleeding","Prevents bleeding"],"Iron Skin":["Defense Down duration -50%","Defense Down duration -75%","Prevents Defense Down"],"Fire Damage Up":["Fire dmg +3% (vs Radiant +8%)","Fire dmg +6% (vs Radiant +15%)","Fire dmg +9% (vs Radiant +23%)","Fire dmg +12% (vs Radiant +30%)","Fire dmg +16% (vs Radiant +40%)","Fire dmg +20% (vs Radiant +50%)","Fire attack +50; fire dmg +28% (vs Radiant +70%)"],"Water Damage Up":["Water dmg +3% (Radiant +8%)","Water dmg +6% (Radiant +15%)","Water dmg +9% (Radiant +23%)","Water dmg +12% (Radiant +30%)","Water dmg +16% (Radiant +40%)","Water dmg +20% (Radiant +50%)","Water attack +50; Water dmg +28% (Radiant +70%)"],"Ice Damage Up":["Ice dmg +3% (Radiant +8%)","Ice dmg +6% (Radiant +15%)","Ice dmg +9% (Radiant +23%)","Ice dmg +12% (Radiant +30%)","Ice dmg +16% (Radiant +40%)","Ice dmg +20% (Radiant +50%)","Ice attack +50; Ice dmg +28% (Radiant +70%)"],"Thunder Damage Up":["Thunder dmg +3% (Radiant +8%)","Thunder dmg +6% (Radiant +15%)","Thunder dmg +9% (Radiant +23%)","Thunder dmg +12% (Radiant +30%)","Thunder dmg +16% (Radiant +40%)","Thunder dmg +20% (Radiant +50%)","Thunder attack +50; Thunder dmg +28% (Radiant +70%)"],"Dragon Damage Up":["Dragon dmg +3% (Radiant +8%)","Dragon dmg +6% (Radiant +15%)","Dragon dmg +9% (Radiant +23%)","Dragon dmg +12% (Radiant +30%)","Dragon dmg +16% (Radiant +40%)","Dragon dmg +20% (Radiant +50%)","Dragon attack +50; Dragon dmg +28% (Radiant +70%)"],"Critical Element":["Elemental dmg +5% on critical hits","Elemental dmg +10% on critical hits","Elemental dmg +15% on critical hits"],"Fire Resistance":["Fire resistance +6","Fire resistance +12","Fire resistance +20"],"Water Resistance":["Water resistance +6","Water resistance +12","Water resistance +20"],"Ice Resistance":["Ice resistance +6","Ice resistance +12","Ice resistance +20"],"Thunder Resistance":["Thunder resistance +6","Thunder resistance +12","Thunder resistance +20"],"Dragon Resistance":["Dragon resistance +6","Dragon resistance +12","Dragon resistance +20"],"Instinct":["Prevents attacks from being deflected"],"Ballistics":["Shortens distance before ammo/arrows reach max power"],"Bow Skill Boost":["Skill dmg +4%","Skill dmg +8%","Skill dmg +13%","Elemental attack +25; skill dmg +20%"],"Quick-Bite":["Slightly faster meat-eating and item (potion/antidote) use","Faster meat-eating and item (potion/antidote) use","Greatly faster meat-eating and item (potion/antidote) use"],"Thrifty Meal":["Activates 25% of the time","Activates 50% of the time","Activates 75% of the time"],"Improviser":["Interactables restore +50 extra health","Interactables restore +80 extra health","Interactables restore +100 extra health"],"Deterrence":["Discourages monsters from engaging after being spotted","Highly discourages monsters from engaging after being spotted","Prevents monsters from engaging after being spotted"],"Gathering Master":["Faster gathering; no stagger while gathering"],"Botanical Expert":["+1 consumable herb item per gather","+1 consumable fruit/seed item per gather","+1 consumable insect item per gather"],"Geo Expert":["+1 extra gather from bonepiles","+1 extra gather from special item gathering points","+1 extra gather from mining outcrops"],"Honey Harvester":["Honey gathered +1"],"Carve Master":["+1 carve (no effect when joining mid-quest)"],"Carving Pro":["No stagger from attacks while carving","While monster has fortitude, attacks reduce its fire res by 20%","While monster has fortitude, attacks reduce its fire res by 30%","While monster has fortitude, attacks reduce its fire res by 40%","While monster has fortitude, attacks reduce its fire res by 50%"],"Specimen Expert":["Higher chance a corpse is left behind","Higher chance a corpse is left behind","Carves guaranteed to remain"],"Weakspot Follow-Up":["75% chance: extra dmg equal to 4%","75% chance: extra dmg equal to 9%","75% chance: extra dmg equal to 14%","75% chance: extra dmg equal to 18%","75% chance: extra dmg equal to 25%"],"Relentless Pursuit":["While active, dmg +4% for 15s","While active, dmg +8% for 15s","While active, dmg +11% for 15s"],"Counter Boost":["While active, dmg +4% for 20s","While active, dmg +8% for 20s","While active, dmg +12% for 20s","While active, dmg +16% for 20s","While active, dmg +20% for 20s","While active, dmg +24% for 20s","Elemental attack +50; on activation dmg +31% for 20s"],"Radiant Sense":["While active, dmg +4%","While active, dmg +8%","While active, dmg +13%","While active, dmg +18%","While active, dmg +25%"],"Health Cycle":["Recover 2 health (once per 8s)","Recover 3 health (once per 8s)","Recover 4 health (once per 8s)"],"Combo Enhancement":["5 hits in 3s: damage +4% for 12s","5 hits in 3s: damage +8% for 12s","5 hits in 3s: damage +12% for 12s","5 hits in 3s: damage +16% for 12s","5 hits in 3s: damage +20% for 12s","5 hits in 3s: damage +24% for 12s","Elem atk +50; 5 hits in 3s: damage +31% for 12s"],"Buddy Boost":["Buddy damage x1.1"],"Bento Lover":["While active, damage +4% for 30s","While active, damage +8% for 30s","While active, damage +12% for 30s","While active, damage +16% for 30s","While active, damage +20% for 30s","While active, damage +24% for 30s","Elem atk +50; on activation damage +31% for 30s"],"Master Climber":["Stamina depletion -25%"],"Airborne":["Airborne attack damage +5%","Airborne attack damage +9%","Airborne attack damage +14%","Airborne attack damage +19%","Airborne attack damage +24%","Airborne attack damage +29%","Elem atk +50; airborne attack damage +37%"],"Item Master":["Effect duration x1.10","Effect duration x1.25","Effect duration x1.50"],"Charge Enhancement":["While active, damage +4% for 15s","While active, damage +8% for 15s","While active, damage +12% for 15s","While active, damage +16% for 15s","While active, damage +20% for 15s","While active, damage +24% for 15s","Elem atk +50; on activation damage +31% for 15s"],"Hunting Instinct":["While active, damage +4% for 120s","While active, damage +8% for 120s","While active, damage +12% for 120s"],"Flash Draw":["While active, damage +4% for 30s","While active, damage +8% for 30s","While active, damage +12% for 30s","While active, damage +16% for 30s","While active, damage +20% for 30s","While active, damage +24% for 30s","Elem atk +50; on activation damage +31% for 30s"],"Spirit Bind Blade":["While active, damage +3% for 30s","While active, damage +7% for 30s","While active, damage +11% for 30s","Elem atk +25; on activation damage +16% for 30s"],"Demonic Strength":["While active, damage +4%","While active, damage +8%","While active, damage +13%","Elem atk +25; while active damage +20%"],"Piercing Strike":["Pierce attack w/ 3+ hits: damage +5%","Pierce attack w/ 3+ hits: damage +9%","Pierce attack w/ 3+ hits: damage +14%","Pierce attack w/ 3+ hits: damage +19%","Pierce attack w/ 3+ hits: damage +24%","Pierce attack w/ 3+ hits: damage +29%","Elem atk +50; on activation damage +37%"],"Charged Power Shot":["While active, damage +5%","While active, damage +9%","While active, damage +14%","While active, damage +19%","While active, damage +24%","While active, damage +29%","Elem atk +50; on activation damage +37%"],"Immovable Stance":["After Ferocity triggers, damage +4% for 30s","After Ferocity triggers, damage +8% for 30s","After Ferocity triggers, damage +12% for 30s","After Ferocity triggers, damage +16% for 30s","After Ferocity triggers, damage +20% for 30s","After Ferocity triggers, damage +24% for 30s","Elem atk +50; after Ferocity triggers damage +31% for 30s"],"Stamina Conversion":["On activation, triggering attack damage +5%","On activation, triggering attack damage +9%","On activation, triggering attack damage +14%","On activation, triggering attack damage +19%","On activation, triggering attack damage +24%","On activation, triggering attack damage +29%","Elem atk +50; on activation triggering attack damage +37%"],"Capacity Boost":["After reloading, damage +4% for 30s","After reloading, damage +8% for 30s","After reloading, damage +12% for 30s","After reloading, damage +16% for 30s","After reloading, damage +20% for 30s","After reloading, damage +24% for 30s","Elem atk +50; after reloading damage +31% for 30s"],"Wrecker":["While active, damage +3% for 60s","While active, damage +7% for 60s","While active, damage +11% for 60s","While active, damage +16%, elem atk +25 for 60s"],"Pierce":["Hit same part 3x in 8s: damage +3% for 30s","Hit same part 3x in 8s: damage +7% for 30s","Hit same part 3x in 8s: damage +11% for 30s","Elem atk +25; hit same part 3x in 8s: damage +16% for 30s"],"Intimidation":["While active, damage +3% for 15s","While active, damage +7% for 15s","While active, damage +11% for 15s","Elem atk +25; on activation damage +16% for 15s"],"Ammo Enhancement":["Normal/Spread/Pierce Ammo damage +3%","Normal/Spread/Pierce Ammo damage +7%","Normal/Spread/Pierce Ammo damage +11%","Elem atk +25; Normal/Spread/Pierce Ammo damage +16%"],"Grace Under Pressure":["While active, defense +20","While active, defense +40","While active, defense +60"],"Suppression Recovery":["While active, recover 5 health (min interval 3s)","While active, recover 10 health (min interval 3s)","While active, recover 15 health (min interval 3s)"],"Morph Boost":["On activation, damage +3% for 60s","On activation, damage +7% for 60s","On activation, damage +11% for 60s","On activation, damage +16%, elem atk +25 for 60s"],"Guild Might - Weapon":["Upgrades to Rarity 1 at matching Adventurer Rank","Upgrades to Rarity 2 at matching Adventurer Rank","Upgrades to Rarity 3 at matching Adventurer Rank","Upgrades to Rarity 4 at matching Adventurer Rank","Upgrades to Rarity 5 at matching Adventurer Rank","Upgrades to Rarity 6 at matching Adventurer Rank","Upgrades to Rarity 7 at matching Adventurer Rank","Upgrades to Rarity 8 at matching Adventurer Rank"],"Guild Might - Helm":["Upgrades to Rarity 1 at matching Adventurer Rank","Upgrades to Rarity 2 at matching Adventurer Rank","Upgrades to Rarity 3 at matching Adventurer Rank","Upgrades to Rarity 4 at matching Adventurer Rank","Upgrades to Rarity 5 at matching Adventurer Rank","Upgrades to Rarity 6 at matching Adventurer Rank","Upgrades to Rarity 7 at matching Adventurer Rank","Upgrades to Rarity 8 at matching Adventurer Rank"],"Guild Might - Mail":["Upgrades to Rarity 1 at matching Adventurer Rank","Upgrades to Rarity 2 at matching Adventurer Rank","Upgrades to Rarity 3 at matching Adventurer Rank","Upgrades to Rarity 4 at matching Adventurer Rank","Upgrades to Rarity 5 at matching Adventurer Rank","Upgrades to Rarity 6 at matching Adventurer Rank","Upgrades to Rarity 7 at matching Adventurer Rank","Upgrades to Rarity 8 at matching Adventurer Rank"],"Guild Might - Gauntlets":["Upgrades to Rarity 1 at matching Adventurer Rank","Upgrades to Rarity 2 at matching Adventurer Rank","Upgrades to Rarity 3 at matching Adventurer Rank","Upgrades to Rarity 4 at matching Adventurer Rank","Upgrades to Rarity 5 at matching Adventurer Rank","Upgrades to Rarity 6 at matching Adventurer Rank","Upgrades to Rarity 7 at matching Adventurer Rank","Upgrades to Rarity 8 at matching Adventurer Rank"],"Guild Might - Coil":["Upgrades to Rarity 1 at matching Adventurer Rank","Upgrades to Rarity 2 at matching Adventurer Rank","Upgrades to Rarity 3 at matching Adventurer Rank","Upgrades to Rarity 4 at matching Adventurer Rank","Upgrades to Rarity 5 at matching Adventurer Rank","Upgrades to Rarity 6 at matching Adventurer Rank","Upgrades to Rarity 7 at matching Adventurer Rank","Upgrades to Rarity 8 at matching Adventurer Rank"],"Guild Might - Greaves":["Upgrades to Rarity 1 at matching Adventurer Rank","Upgrades to Rarity 2 at matching Adventurer Rank","Upgrades to Rarity 3 at matching Adventurer Rank","Upgrades to Rarity 4 at matching Adventurer Rank","Upgrades to Rarity 5 at matching Adventurer Rank","Upgrades to Rarity 6 at matching Adventurer Rank","Upgrades to Rarity 7 at matching Adventurer Rank","Upgrades to Rarity 8 at matching Adventurer Rank"]};
+const SLOTS=["head","chest","arms","waist","legs"];
+const SLOTNAME={head:"Head",chest:"Chest",arms:"Arms",waist:"Waist",legs:"Legs"};
+const AR_CAP=[[1,2],[16,3],[18,4],[21,5],[26,6],[31,7],[34,8],[41,9],[44,10],[47,11]];
+const ELEM={"Fire Damage Up":"fire","Water Damage Up":"water","Thunder Damage Up":"thunder","Ice Damage Up":"ice","Dragon Damage Up":"dragon"};
+const ELEM_N=[0,3,6,9,12,16,20,28], ELEM_R=[0,8,15,23,30,40,50,70];
+const KNOWN={"Breaker":l=>`Part damage ×${(1+0.1*l).toFixed(1)}`,"Radiant Sense":l=>`+${[0,4,8,13,18,25][l]}% dmg in Radiant Rage`,"Wrecker":l=>`+${[0,3,7,11,16][l]}% dmg 60s after stagger/break`,"Health Cycle":l=>`Heal ${[0,2,3,4][l]} on broken parts (8s CD)`};
+const PRESETS=[["Fire","Fire Damage Up"],["Water","Water Damage Up"],["Thunder","Thunder Damage Up"],["Ice","Ice Damage Up"],["Dragon","Dragon Damage Up"],["Breaker","Breaker"],["Health Cycle","Health Cycle"],["Radiant Sense","Radiant Sense"]];
+const PAGE=20, HARD_CAP=3000, NEAR_CAP=300;
+// fewest missing levels first; ties go to the set closer on the skills listed first
+function nearCmp(a,b){ if(a.short!==b.short) return a.short-b.short; for(let k=0;k<a.g.length;k++){ if(a.g[k]!==b.g[k]) return b.g[k]-a.g[k] } return Object.values(b.ev.tot).reduce((x,y)=>x+y,0)-Object.values(a.ev.tot).reduce((x,y)=>x+y,0) }
+
+const PIECES=[]; const SETS={};
+DATA.sets.forEach(s=>{SETS[s.s]=s; s.pc.forEach(p=>PIECES.push({id:PIECES.length,name:p[0],slot:p[1],min:p[2],sk:p[3],set:s.s}))});
+const SETSKILLS=DATA.sets.filter(s=>s.k.n).map(s=>({set:s.s,name:s.k.n,p:s.k.p,e:s.k.e,g:s.k.g})).sort((a,b)=>a.name.localeCompare(b.name));
+const ALLSKILLS=[...new Set(PIECES.flatMap(p=>p.sk.map(k=>k[0])).concat(DATA.sets.flatMap(s=>s.k.g.map(g=>g[0]))))].sort();
+const maxOf=s=>(DATA.skills[s]||[3])[0]||3;
+const descOf=s=>(DATA.skills[s]||[0,""])[1]||"";
+const PS={}; // cache piece skills per rarity
+function pieceSkills(p,r){
+  if(r<p.min) return null; const key=p.id+"_"+r; if(PS[key]) return PS[key];
+  const m={}; p.sk.forEach(([s,l,f])=>{const at=f==null?p.min:f; if(at<=r) m[s]=Math.max(m[s]||0,l)}); return PS[key]=m;
+}
+function evalBuild(ids,r){
+  const tot={}, cnt={};
+  ids.forEach(id=>{ if(id==null) return; const p=PIECES[id]; const m=pieceSkills(p,r); if(!m) return;
+    for(const s in m) tot[s]=(tot[s]||0)+m[s]; cnt[p.set]=(cnt[p.set]||0)+1; });
+  const active=[];
+  for(const set in cnt){const k=SETS[set].k; if(k.p && cnt[set]>=k.p){active.push(set); k.g.forEach(([s,l])=>tot[s]=(tot[s]||0)+l)}}
+  const capped={}; for(const s in tot) capped[s]=Math.min(tot[s],maxOf(s));
+  return {tot:capped,raw:tot,cnt,active};
+}
+
+// Exhaustive search over pieces that can matter for the requirements; null = free slot.
+// A requirement is [name, level] for a skill, or [setName, 0, "set"] for an armor set effect.
+const isSet=q=>q[2]==="set";
+const tgt=q=>isSet(q)?(SETS[q[0]].k.p||1):q[1];
+const val=(ev,q)=>isSet(q)?Math.min(ev.cnt[q[0]]||0,tgt(q)):Math.min(ev.tot[q[0]]||0,q[1]);
+const qLabel=q=>isSet(q)?(SETS[q[0]].k.n||q[0]):q[0];
+const meets=(ev,reqs)=>reqs.every(q=>val(ev,q)>=tgt(q));
+function search(r,reqs,cap=HARD_CAP){
+  const S=reqs.filter(q=>!isSet(q)).map(q=>q[0]);
+  const setHelps=new Set(DATA.sets.filter(s=>s.k.g.some(g=>S.includes(g[0]))).map(s=>s.s));
+  reqs.filter(isSet).forEach(q=>setHelps.add(q[0]));
+  const cands=SLOTS.map(slot=>[null,...PIECES.filter(p=>p.slot===slot && p.min<=r && (S.some(s=>pieceSkills(p,r)[s]) || setHelps.has(p.set))).map(p=>p.id)]);
+  const found=[]; let total=0; const cur=[]; let near=[];
+  const got=ev=>reqs.map(q=>val(ev,q));
+  const reqSum=ev=>got(ev).reduce((a,b)=>a+b,0);
+  (function rec(i){
+    if(i===5){
+      const ev=evalBuild(cur,r);
+      if(meets(ev,reqs)){
+        // keep only minimal sets: removing any used piece must break a requirement
+        for(let j=0;j<5;j++){ if(cur[j]==null) continue; const t=[...cur]; t[j]=null; if(meets(evalBuild(t,r),reqs)) return; }
+        total++; if(found.length<cap) found.push({ids:[...cur],ev});
+      } else {
+        // closest sets: keep minimal ones (every used piece adds to a requirement)
+        const base=reqSum(ev);
+        for(let j=0;j<5;j++){ if(cur[j]==null) continue; const t=[...cur]; t[j]=null; if(reqSum(evalBuild(t,r))>=base) return; }
+        const g=got(ev); const short=reqs.reduce((a,q,k)=>a+(tgt(q)-g[k]),0);
+        near.push({ids:[...cur],ev,short,g});
+        if(near.length>NEAR_CAP*2){near.sort(nearCmp); near=near.slice(0,NEAR_CAP)}
+      }
+      return;
+    }
+    for(const id of cands[i]){ cur[i]=id; rec(i+1); }
+  })(0);
+  near.sort(nearCmp); near=near.slice(0,NEAR_CAP);
+  return {found,total,near,closest:near[0]||null};
+}
+const lvOf=(s,l)=>{const a=(DATA.levels||{})[s]; return a&&a[l-1]?a[l-1]:null};
+function effect(s,l){
+  const t=lvOf(s,l); if(t) return t;
+  if(ELEM[s]) return `+${ELEM_N[l]}% · vs Radiant +${ELEM_R[l]}%${l===7?" · +50 elem atk":""}`;
+  if(KNOWN[s]) return KNOWN[s](l);
+  return descOf(s);
+}
+const $=id=>document.getElementById(id);
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const arFor=r=>{if(r<3) return null; const x=AR_CAP.find(a=>a[1]===r); return x?x[0]:null};
+const extraOf=b=>Object.values(b.ev.tot).reduce((a,c)=>a+c,0);
+const freeOf=b=>b.ids.filter(x=>x==null).length;
+
+let R=7, REQS=[["Fire Damage Up",7],["Breaker",3]], BUILD=[null,null,null,null,null], RES=null, SHOWN=PAGE;
+try{const s=JSON.parse(localStorage.getItem("forge3")||"null"); if(s){R=s.R||R; REQS=s.Q||REQS; BUILD=s.B||BUILD}}catch(e){}
+const save=()=>{try{localStorage.setItem("forge3",JSON.stringify({R,Q:REQS,B:BUILD}))}catch(e){}};
+
+function initControls(){
+  const rs=$("rar"); for(let r=1;r<=11;r++){const o=document.createElement("option");o.value=r;o.textContent=`Rarity ${r}`+(arFor(r)?` (AR ${arFor(r)}+)`:"");rs.appendChild(o)}
+  rs.value=R; if(R!==7){const a=arFor(R); if(a) $("ar").value=a}
+  $("ar").addEventListener("input",()=>{const v=+$("ar").value||1; let r=2; AR_CAP.forEach(([a,c])=>{if(v>=a) r=c}); setR(r)});
+  rs.addEventListener("change",()=>{setR(+rs.value); const a=arFor(R); if(a) $("ar").value=a});
+  PRESETS.forEach(([n,s])=>{const b=document.createElement("button"); const e=ELEM[s];
+    b.innerHTML=`<span class="chip"><span class="dot" style="background:var(--${e||"accent"})"></span>${esc(n)} ${maxOf(s)}</span>`;
+    b.onclick=()=>{const i=REQS.findIndex(q=>q[0]===s&&!isSet(q)); if(i>=0) REQS[i][1]=maxOf(s); else REQS.push([s,maxOf(s)]); drawReqs(); run()};
+    $("presets").appendChild(b)});
+  $("addreq").onclick=()=>{REQS.push([ALLSKILLS.find(s=>!REQS.some(q=>q[0]===s&&!isSet(q))),1]); drawReqs(); openPicker(REQS.length-1,"skill")};
+  $("addset").onclick=()=>{REQS.push([SETSKILLS.find(x=>!REQS.some(q=>isSet(q)&&q[0]===x.set)).set,0,"set"]); drawReqs(); openPicker(REQS.length-1,"set")};
+  $("clearreq").onclick=()=>{REQS=[]; drawReqs(); run()};
+  $("run").onclick=run;
+  $("sort").onchange=()=>{SHOWN=PAGE; drawResults(); $("results").scrollTop=0};
+  $("more").onclick=()=>{const box=$("results"), top=box.scrollTop; SHOWN+=PAGE; drawResults(); box.scrollTop=top};
+  drawReqs();
+}
+function levelList(sk){const mx=maxOf(sk); return Array.from({length:mx},(_,k)=>[k+1,lvOf(sk,k+1)||effect(sk,k+1)])}
+// "Part damage x1.1/1.2/1.3": merge levels whose wording matches, numbers joined with "/"
+function compactLevels(sk){
+  const L=levelList(sk).map(x=>x[1]); if(L.length<2) return L[0]||"";
+  const tok=t=>String(t).split(/(\d+(?:\.\d+)?)/), shape=t=>tok(t).filter((_,i)=>i%2===0).join("#");
+  const groups=[]; let a=0;
+  while(a<L.length){ let b=a+1; while(b<L.length && shape(L[b])===shape(L[a])) b++; groups.push([a,b]); a=b; }
+  return groups.map(([a,b])=>{ const T=L.slice(a,b).map(tok);
+    const txt=T[0].map((p,i)=>i%2===0?p:(T.every(t=>t[i]===p)?p:T.map(t=>t[i]).join("/"))).join("");
+    return (groups.length>1?`Lv${a+1}${b-a>1?"–"+b:""}: `:"")+txt }).join(" · ");
+}
+// Same as compactLevels, as HTML with the value for level `cur` highlighted
+function compactHTML(sk,cur){
+  const L=levelList(sk).map(x=>x[1]); if(!L.length) return "";
+  if(L.length<2) return `<mark>${esc(L[0])}</mark>`;
+  const tok=t=>String(t).split(/(\d+(?:\.\d+)?)/), shape=t=>tok(t).filter((_,i)=>i%2===0).join("#");
+  const groups=[]; let a=0;
+  while(a<L.length){ let b=a+1; while(b<L.length && shape(L[b])===shape(L[a])) b++; groups.push([a,b]); a=b; }
+  return groups.map(([a,b])=>{ const T=L.slice(a,b).map(tok); const k=cur-1-a, inG=k>=0&&k<b-a;
+    const txt=T[0].map((p,i)=>{ if(i%2===0) return esc(p); if(T.every(t=>t[i]===p)) return esc(p);
+      return T.map((t,j)=>j===k?`<mark>${esc(t[i])}</mark>`:esc(t[i])).join("/") }).join("");
+    const lab=groups.length>1?`<span class="lvlab">Lv${a+1}${b-a>1?"–"+b:""}:</span> `:"";
+    return `<span class="grp${inG?" in":""}">${lab}${txt}</span>` }).join(" · ");
+}
+function skillTip(sk){
+  const t=descOf(sk)||"No description listed yet.";
+  return t+"\n"+compactLevels(sk);
+}
+function levelsHTML(sk,cur){return `<ol class="lvls">${levelList(sk).map(([l,e])=>`<li class="${l===cur?"now":""}"><b>Lv${l}</b><span>${esc(e)}</span></li>`).join("")}</ol>`}
+function setTip(set){const k=SETS[set].k; return `${k.n||set} — wear ${k.p||"?"} ${set} pieces. ${k.e||""}`.trim()}
+function drawReqs(){
+  const box=$("reqs"); box.innerHTML="";
+  if(!REQS.length) box.innerHTML=`<p class="empty" style="margin:0">Nothing yet. Add a skill or a set effect, or tap a quick add below.</p>`;
+  REQS.forEach((q,i)=>{
+    const row=document.createElement("div"); row.className="req";
+    const btn=document.createElement("button"); btn.className="pick"; btn.id="req-s"+i; btn.type="button";
+    btn.setAttribute("aria-haspopup","listbox"); btn.title=isSet(q)?setTip(q[0]):skillTip(q[0]);
+    btn.innerHTML=`<span class="kind ${isSet(q)?"set":""}">${isSet(q)?"Set":"Skill"}</span><span class="pname">${esc(qLabel(q))}</span><span aria-hidden="true">▾</span>`;
+    btn.onclick=()=>openPicker(i,isSet(q)?"set":"skill");
+    let lv;
+    if(isSet(q)){ lv=document.createElement("span"); lv.className="pcs"; lv.textContent=`${tgt(q)} pcs`; lv.title=`Needs ${tgt(q)} ${q[0]} pieces`; }
+    else { lv=document.createElement("select"); lv.id="req-l"+i; lv.setAttribute("aria-label","Minimum level");
+      const m=maxOf(q[0]); if(q[1]>m) q[1]=m; if(q[1]<1) q[1]=1;
+      lv.innerHTML=Array.from({length:m},(_,k)=>`<option value="${k+1}" ${k+1===q[1]?"selected":""} title="${esc(effect(q[0],k+1))}">Lv ${k+1}</option>`).join("");
+      lv.title=effect(q[0],q[1]);
+      lv.onchange=()=>{q[1]=+lv.value; lv.title=effect(q[0],q[1]); hint.textContent=`Lv${q[1]}: ${effect(q[0],q[1])}`; save()}; }
+    const x=document.createElement("button"); x.textContent="Remove"; x.setAttribute("aria-label","Remove "+qLabel(q));
+    x.onclick=()=>{REQS.splice(i,1); drawReqs(); run()};
+    row.append(btn,lv,x);
+    const hint=document.createElement("div"); hint.className="hint";
+    hint.textContent=isSet(q)?(SETS[q[0]].k.e||""):`Lv${q[1]}: ${effect(q[0],q[1])}`;
+    row.appendChild(hint); box.appendChild(row)});
+  save();
+}
+// Searchable picker with descriptions (hover or arrow keys to preview)
+let PICK=null;
+function openPicker(i,mode){
+  closePicker();
+  const row=$("req-s"+i).parentElement;
+  const pop=document.createElement("div"); pop.className="picker"; pop.setAttribute("role","dialog"); pop.setAttribute("aria-label","Choose a skill or set effect");
+  pop.innerHTML=`<div class="ptabs" role="tablist"><button type="button" data-m="skill" role="tab">Skills</button><button type="button" data-m="set" role="tab">Set effects</button></div>
+    <input type="search" class="pq" id="pq" placeholder="Search…" aria-label="Search">
+    <ul class="plist" role="listbox" id="plist"></ul>
+    <div class="pdesc" id="pdesc" aria-live="polite"></div>`;
+  row.appendChild(pop); PICK={i,mode,pop,items:[],hi:0};
+  pop.querySelectorAll(".ptabs button").forEach(b=>b.onclick=()=>{PICK.mode=b.dataset.m; fillPicker()});
+  const qi=pop.querySelector(".pq"); qi.oninput=()=>{PICK.hi=0; fillPicker()};
+  qi.onkeydown=e=>{ if(e.key==="ArrowDown"){PICK.hi=Math.min(PICK.hi+1,PICK.items.length-1);hiPicker();e.preventDefault()}
+    else if(e.key==="ArrowUp"){PICK.hi=Math.max(PICK.hi-1,0);hiPicker();e.preventDefault()}
+    else if(e.key==="Enter"){choosePicker(PICK.hi);e.preventDefault()} else if(e.key==="Escape"){closePicker()} };
+  fillPicker(); setTimeout(()=>qi.focus(),0);
+}
+function fillPicker(){
+  const {pop,mode}=PICK; const q=pop.querySelector(".pq").value.trim().toLowerCase();
+  pop.querySelectorAll(".ptabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.m===mode));
+  PICK.items = mode==="skill"
+    ? ALLSKILLS.filter(s=>!q||s.toLowerCase().includes(q)||descOf(s).toLowerCase().includes(q)).map(s=>({v:s,name:s,sub:`Max Lv ${maxOf(s)}`,desc:descOf(s),lv:s,short:compactLevels(s)}))
+    : SETSKILLS.filter(x=>!q||x.name.toLowerCase().includes(q)||x.set.toLowerCase().includes(q)||(x.e||"").toLowerCase().includes(q)).map(x=>({v:x.set,name:x.name,sub:`${x.set} · ${x.p||"?"} pcs`,desc:`Wear ${x.p||"?"} ${x.set} pieces. ${x.e||""}`,short:x.g.map(g=>g[0]+" +"+g[1]).join(", ")}));
+  const cur=REQS[PICK.i]; const curV=cur&&((mode==="set")===isSet(cur))?cur[0]:null;
+  const ci=PICK.items.findIndex(it=>it.v===curV); if(ci>=0&&!q) PICK.hi=ci;
+  const ul=pop.querySelector(".plist");
+  ul.innerHTML=PICK.items.length?PICK.items.map((it,k)=>`<li role="option" data-k="${k}" id="popt${k}"><span class="pn">${esc(it.name)}</span><span class="ps">${esc(it.sub)}</span><span class="pd">${esc(it.short)}</span></li>`).join(""):`<li class="empty">No match. Try another word.</li>`;
+  ul.querySelectorAll("li[data-k]").forEach(li=>{const k=+li.dataset.k;
+    li.onmouseenter=()=>{PICK.hi=k;hiPicker(false)}; li.onclick=()=>choosePicker(k)});
+  hiPicker();
+}
+function hiPicker(scroll=true){
+  const {pop,items,hi}=PICK; pop.querySelectorAll("li[data-k]").forEach(li=>li.setAttribute("aria-selected",+li.dataset.k===hi));
+  const el=pop.querySelector(`#popt${hi}`); if(el&&scroll) el.scrollIntoView({block:"nearest"});
+  const it=items[hi]; const cur=REQS[PICK.i];
+  pop.querySelector(".pdesc").innerHTML=it?`<strong>${esc(it.name)}</strong><span>${esc(it.desc||"")}</span>${it.lv?`<span class="cmp">${esc(compactLevels(it.lv))}</span>`:""}`:"";
+}
+function choosePicker(k){
+  const it=PICK.items[k]; if(!it) return; const i=PICK.i;
+  REQS[i]=PICK.mode==="set"?[it.v,0,"set"]:[it.v,Math.min(REQS[i]&&!isSet(REQS[i])?REQS[i][1]:maxOf(it.v),maxOf(it.v)),undefined];
+  if(REQS[i][2]===undefined) REQS[i].length=2;
+  closePicker(); drawReqs(); $("req-s"+i).focus();
+}
+function closePicker(){ if(PICK){PICK.pop.remove(); PICK=null} }
+document.addEventListener("pointerdown",e=>{ if(PICK && !PICK.pop.contains(e.target) && !e.target.closest(".pick")) closePicker() });
+function setR(r){R=r; $("rar").value=r; $("rbadge").textContent="R"+r; drawSlots(); run(); save()}
+
+function reqSummary(ev){return REQS.map(q=>{const v=val(ev,q), t=tgt(q); return `<span class="tag ${v>=t?"hi":"miss"}" title="${esc(isSet(q)?setTip(q[0]):skillTip(q[0]))}">${esc(qLabel(q))} ${v}/${t}${isSet(q)?" pcs":""}</span>`}).join("")}
+function piecesLine(ids){return ids.map((id,i)=>id==null?`<span class="free">${SLOTNAME[SLOTS[i]]}: free</span>`:esc(PIECES[id].name)).join(" · ")}
+
+function run(){
+  const box=$("results"); box.innerHTML=""; $("verdict").innerHTML=""; $("more").hidden=true; $("sortbox").hidden=true;
+  if(!REQS.length){$("runinfo").textContent=""; RES=null; drawLadder(); drawTotals(); return}
+  const t0=performance.now(); RES=search(R,REQS); const ms=Math.round(performance.now()-t0); SHOWN=PAGE;
+  $("runinfo").textContent=`Checked every mix at rarity ${R} in ${ms} ms.`;
+  if(RES.total){
+    $("verdict").innerHTML=`<div class="verdict ok"><div><strong>${RES.total.toLocaleString()} set${RES.total>1?"s":""} found</strong> at rarity ${R}${RES.total>HARD_CAP?` (showing the first ${HARD_CAP})`:""}.</div></div>`;
+    $("sortbox").hidden=false; drawResults();
+  } else {
+    let opens=null; for(let r=R+1;r<=11;r++){ if(search(r,REQS,1).total){opens=r;break} }
+    const c=RES.closest;
+    $("verdict").innerHTML=`<div class="verdict no"><div><strong>No exact match</strong> at rarity ${R}. Showing the closest sets instead${c?`, best is <strong>${c.short} level${c.short>1?"s":""} short</strong>`:""}.</div>
+      ${opens?`<div>An exact match opens at <strong>rarity ${opens}</strong>${arFor(opens)?` (AR ${arFor(opens)})`:""}. <button id="jump">Show rarity ${opens} sets</button></div>`:`<div>Armor alone can't hit every level at any rarity (up to 11). Your weapon may add the missing skill.</div>`}</div>`;
+    if(opens) $("jump").onclick=()=>{const a=arFor(opens); if(a) $("ar").value=a; setR(opens)};
+    $("sortbox").hidden=false; drawResults();
+  }
+  if(BUILD.every(x=>x==null)){const pick=RES.total?RES.found[0]:RES.closest; if(pick){BUILD=[...pick.ids]; drawSlots()}}
+  setTimeout(drawLadder,30); drawTotals(); save();
+}
+function drawResults(){
+  const box=$("results"); box.innerHTML="";
+  const exact=RES.total>0; const src=exact?RES.found:RES.near; const mode=$("sort").value;
+  const list=[...src].sort(mode==="free"?(a,b)=>(exact?0:a.short-b.short)||freeOf(b)-freeOf(a)||extraOf(b)-extraOf(a):mode==="extra"?(a,b)=>(exact?0:a.short-b.short)||extraOf(b)-extraOf(a)||freeOf(b)-freeOf(a):(a,b)=>exact?freeOf(b)-freeOf(a):nearCmp(a,b));
+  list.slice(0,SHOWN).forEach((b,i)=>{
+    const d=document.createElement("div"); d.className="res";
+    const others=Object.entries(b.ev.tot).filter(([s])=>!REQS.some(q=>q[0]===s)).sort((x,y)=>y[1]-x[1]).map(([s,l])=>`<span class="tag" title="${esc(skillTip(s))}">${esc(s)} ${l}</span>`).join("");
+    const f=freeOf(b);
+    const head=exact?`Set ${i+1}`:`${b.short} short`;
+    d.innerHTML=`<div class="res-head"><strong>${head}${f?` · ${f} free slot${f>1?"s":""}`:""}</strong><button>Load into builder</button></div>
+      <div class="pieces">${piecesLine(b.ids)}</div>
+      <div class="tags">${reqSummary(b.ev)}${others}</div>
+      ${b.ev.active.length?`<div class="note">Set skills: ${b.ev.active.map(s=>esc(SETS[s].k.n)).join(", ")}</div>`:""}`;
+    d.querySelector("button").onclick=()=>loadBuild(b.ids);
+    box.appendChild(d)});
+  $("more").hidden=list.length<=SHOWN;
+  $("more").textContent=`Show more sets (${Math.min(SHOWN,list.length)} of ${list.length} shown)`;
+}
+function loadBuild(ids){BUILD=[...ids]; drawSlots(); save(); $("b-h").scrollIntoView({behavior:"smooth",block:"start"})}
+function drawSlots(){
+  const box=$("slots"); box.innerHTML="";
+  SLOTS.forEach((slot,i)=>{
+    const av=PIECES.filter(p=>p.slot===slot && p.min<=R).sort((a,b)=>a.name.localeCompare(b.name));
+    if(BUILD[i]!=null && !av.some(p=>p.id===BUILD[i])) BUILD[i]=null;
+    const row=document.createElement("div"); row.className="slot";
+    const sel=document.createElement("select"); sel.id="slot-"+slot;
+    sel.innerHTML=`<option value="">— free —</option>`+av.map(p=>{const m=pieceSkills(p,R);const s=Object.entries(m).map(([k,l])=>k+" "+l).join(", ");return `<option value="${p.id}" ${p.id===BUILD[i]?"selected":""}>${esc(p.name)} — ${esc(s)}</option>`}).join("");
+    sel.onchange=()=>{BUILD[i]=sel.value===""?null:+sel.value; drawSlots(); save()};
+    const lab=document.createElement("label"); lab.className="lbl"; lab.htmlFor=sel.id; lab.textContent=SLOTNAME[slot];
+    const sk=document.createElement("div"); sk.className="sk"; sk.innerHTML=BUILD[i]!=null?progHTML(PIECES[BUILD[i]],R):"";
+    row.append(lab,sel,sk); box.appendChild(row)});
+  drawTotals();
+}
+function drawTotals(){
+  const ev=evalBuild(BUILD,R);
+  $("reqcheck").innerHTML=REQS.length?reqSummary(ev):"";
+  const sets=Object.entries(ev.cnt).map(([s,c])=>{const k=SETS[s].k; const on=k.p&&c>=k.p;
+    return `<div title="${esc(setTip(s))}"><span class="${on?"on":"off"}">${on?"●":"○"} ${esc(k.n||s)}</span> <span class="off">(${esc(s)} ${c}/${k.p||"?"}) — ${esc(k.g.map(g=>g[0]+" +"+g[1]).join(", "))}</span></div>`}).join("");
+  $("setline").innerHTML=sets?`<span class="lbl">Set skills</span>${sets}`:"";
+  const isReq=s=>REQS.some(q=>q[0]===s&&!isSet(q));
+  const tb=$("totals").querySelector("tbody");
+  const rows=Object.entries(ev.tot).sort((a,b)=>isReq(b[0])-isReq(a[0])||b[1]-a[1]);
+  tb.innerHTML=rows.length?rows.map(([s,l])=>{const mx=maxOf(s); const over=ev.raw[s]>mx; const e=ELEM[s];
+    return `<tr title="${esc(skillTip(s))}"><td>${e?`<span class="dot" style="background:var(--${e})"></span> `:""}${isReq(s)?"<strong>"+esc(s)+"</strong>":esc(s)}</td><td class="num">${l}/${mx}${over?' <span title="Extra levels are wasted" style="color:var(--warn)">capped</span>':""}</td><td><div class="bar"><i style="width:${100*l/mx}%"></i></div></td><td class="note eff">${compactHTML(s,l)}</td></tr>`}).join(""):`<tr><td colspan="4" class="empty">Choose pieces, or load a set from the search.</td></tr>`;
+}
+function drawLadder(){
+  const tb=$("ladder").querySelector("tbody");
+  if(!REQS.length){tb.innerHTML=`<tr><td colspan="4" class="empty">Add a required skill to see the ladder.</td></tr>`;return}
+  let rows="";
+  for(let r=2;r<=11;r++){const s=r===R&&RES?RES:search(r,REQS,1);
+    const ex=s.total?(s.found.slice().sort((a,b)=>freeOf(b)-freeOf(a))[0]):null;
+    rows+=`<tr class="${r===R?"cur":""}"><td class="num">R${r}</td><td class="num">${arFor(r)?"AR "+arFor(r):"below AR 16"}</td><td class="num">${s.total?`<span class="tag hi">${s.total.toLocaleString()} exact</span>`:s.closest?`<span class="tag miss">${s.closest.short} short</span>`:`<span class="tag miss">none</span>`}</td><td class="pieces">${ex?piecesLine(ex.ids):s.closest?`<span class="tags">${REQS.map((q,j)=>`<span class="tag">${esc(qLabel(q))} ${s.closest.g[j]}/${tgt(q)}</span>`).join("")}</span> ${piecesLine(s.closest.ids)}`:"—"}</td></tr>`}
+  tb.innerHTML=rows;
+}
+// per-rarity progression for one piece
+function progHTML(p,r){
+  const seen={}; const steps={};
+  p.sk.map(([s,l,f])=>[s,l,f==null?p.min:f]).sort((a,b)=>a[2]-b[2]||a[0].localeCompare(b[0])).forEach(([s,l,at])=>{
+    if((seen[s]||0)>=l) return; const up=!!seen[s]; seen[s]=l; (steps[at]=steps[at]||[]).push([s,l,up])});
+  return `<div class="prog">`+Object.keys(steps).map(Number).sort((a,b)=>a-b).map(at=>steps[at].map(([s,l,up])=>`<span class="step${at>r?" locked":""}${up?" up":""}" title="${esc(s+" Lv"+l+": "+effect(s,l))}"><b>R${at}</b><span>${esc(s)} ${l}</span></span>`).join("")).join("")+`</div>`;
+}
+const SLOTORD={head:0,chest:1,arms:2,waist:3,legs:4};
+function drawDB(){
+  const q=$("dbq").value.trim().toLowerCase(), sl=$("dbslot").value, cap=$("dbavail").value==="cap";
+  const rows=PIECES.filter(p=>(!sl||p.slot===sl)&&(!cap||p.min<=R)&&(!q||p.name.toLowerCase().includes(q)||p.set.toLowerCase().includes(q)||p.sk.some(k=>k[0].toLowerCase().includes(q))))
+    .sort((a,b)=>a.set.localeCompare(b.set)||SLOTORD[a.slot]-SLOTORD[b.slot]);
+  $("db").querySelector("tbody").innerHTML=rows.length?rows.map(p=>`<tr><td><strong>${esc(p.name)}</strong></td><td>${esc(p.set)}</td><td>${SLOTNAME[p.slot]}</td><td class="num">R${p.min}</td><td>${progHTML(p,R)}</td></tr>`).join(""):`<tr><td colspan="5" class="empty">No pieces match. Try another search.</td></tr>`;
+  $("dbcount").textContent=`${rows.length} of ${PIECES.length} pieces`;
+}
+["dbq","dbslot","dbavail"].forEach(id=>$(id).addEventListener("input",drawDB));
+const _setR=setR; setR=function(r){_setR(r); drawDB()};
+initControls(); $("rbadge").textContent="R"+R; drawSlots(); run(); drawDB();
+</script>
+
+</body></html>
