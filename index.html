@@ -10,6 +10,7 @@
   --bg:#f3f1ec; --panel:#fbfaf7; --ink:#22201c; --muted:#6b665c; --line:#d9d4c8;
   --accent:#a8641c; --accent-ink:#ffffff; --accent-soft:#f1e3cf;
   --good:#2f7a4b; --warn:#a36a00;
+  --c-off:#c62f2f; --c-def:#4a55c4; --c-qol:#2f8f5b;
   --fire:#c2410c; --water:#1d6fb8; --thunder:#a67c00; --ice:#3b8fa8; --dragon:#7a3fa0;
   --display:"Barlow Condensed","Arial Narrow",sans-serif;
   --body:"IBM Plex Sans",system-ui,sans-serif;
@@ -21,12 +22,14 @@
   --accent:#e0913f; --accent-ink:#1a1209; --accent-soft:#3a2a18;
   --good:#5cc183; --warn:#e3a93a;
   --fire:#f07a45; --water:#5aa9ee; --thunder:#e5c04a; --ice:#6cc6dd; --dragon:#b886e0;
+  --c-off:#f0706a; --c-def:#8f98f2; --c-qol:#5cc183;
   color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#17161a; --panel:#201f24; --ink:#ece8df; --muted:#a39d91; --line:#36343b;
   --accent:#e0913f; --accent-ink:#1a1209; --accent-soft:#3a2a18;
   --good:#5cc183; --warn:#e3a93a;
   --fire:#f07a45; --water:#5aa9ee; --thunder:#e5c04a; --ice:#6cc6dd; --dragon:#b886e0;
+  --c-off:#f0706a; --c-def:#8f98f2; --c-qol:#5cc183;
   color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.5}
@@ -53,6 +56,13 @@ button:hover{border-color:var(--accent)}
 button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
 .chip{display:inline-flex;align-items:center;gap:6px}
 .dot{width:9px;height:9px;border-radius:50%;display:inline-block;background:var(--muted)}
+.cdot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none;margin-right:5px;vertical-align:baseline}
+.eicow{display:inline-flex;align-items:center;flex:none;margin-right:5px;vertical-align:middle}
+.eico{display:block}
+.cats{display:flex;flex-wrap:wrap;gap:5px}
+.cats button{padding:3px 9px;font-size:.78rem;display:inline-flex;align-items:center}
+.cats button[aria-pressed=true]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.cats button[aria-pressed=true] .cdot{box-shadow:0 0 0 1.5px var(--accent-ink)}
 .prio{display:grid;grid-template-columns:minmax(0,1fr) 110px;gap:8px}
 .results{display:flex;flex-direction:column;gap:10px;max-height:min(620px,65vh);overflow-y:auto;overscroll-behavior:contain;padding-right:6px;scrollbar-gutter:stable}
 .results:empty{display:none}
@@ -76,6 +86,8 @@ button.primary{background:var(--accent);color:var(--accent-ink);border-color:var
 .step.locked{opacity:.5}
 .step.locked b{background:transparent;border:1px dashed var(--muted)}
 .step.up span{color:var(--accent);font-weight:600}
+.dbhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.dbbody{display:flex;flex-direction:column;gap:14px}
 .dbbar{display:flex;flex-wrap:wrap;gap:8px}
 .dbbar input[type=search]{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:7px 9px;flex:1 1 220px;min-width:0}
 .dbwrap{max-height:min(640px,70vh);overflow:auto;border:1px solid var(--line);border-radius:8px}
@@ -198,7 +210,7 @@ tr.cur td{background:var(--accent-soft)}
           <button id="clearreq">Clear</button>
         </div>
       </div>
-      <div class="field"><span class="lbl">Quick add (max level)</span><div class="presets" id="presets"></div></div>
+      <div class="field"><span class="lbl">Recently searched</span><div class="presets" id="presets"></div></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
         <button class="primary" id="run">Search</button>
         <span class="note" id="runinfo"></span>
@@ -225,16 +237,20 @@ tr.cur td{background:var(--accent-soft)}
   </div>
 
   <section class="panel" aria-labelledby="db-h">
-    <h2 id="db-h">Armor database</h2>
+    <div class="dbhead"><h2 id="db-h">Armor database</h2><button id="dbtoggle" type="button" aria-expanded="false" aria-controls="dbbody">Show</button></div>
+    <div id="dbbody" class="dbbody" hidden>
     <p class="note" style="margin:0">Every piece and the rarity where each skill level unlocks. Steps above your rarity cap are faded.</p>
+    <div class="legend"><span><span class="cdot" style="background:var(--c-off)"></span>Offensive</span><span><span class="cdot" style="background:var(--c-def)"></span>Defensive</span><span><span class="cdot" style="background:var(--c-qol)"></span>QoL</span><span><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" style="color:var(--fire);margin-right:2px;vertical-align:middle"><path fill="currentColor" d="M8 1.2c0 2.6-3.7 4.1-3.7 7.8a3.7 3.7 0 0 0 7.4 0c0-1.8-.8-2.8-1.7-3.7-.2 1.1-.7 1.6-1.3 1.8C8.8 5.4 8.6 3.2 8 1.2z"/></svg><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" style="color:var(--water);margin-right:2px;vertical-align:middle"><path fill="currentColor" d="M8 1.3C6.2 4.7 3.9 6.9 3.9 9.6a4.1 4.1 0 0 0 8.2 0C12.1 6.9 9.8 4.7 8 1.3z"/></svg><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" style="color:var(--thunder);margin-right:2px;vertical-align:middle"><path fill="currentColor" d="M9.6 .9 3.9 9h3.6l-1 6.1L12.1 7H8.5z"/></svg><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" style="color:var(--ice);margin-right:2px;vertical-align:middle"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" d="M8 1.6v12.8M2.5 4.8l11 6.4M2.5 11.2l11-6.4"/></svg><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" style="color:var(--dragon);margin-right:2px;vertical-align:middle"><path fill="currentColor" d="M8 1.2 13.2 5.4 11.2 14.6 8 12.4 4.8 14.6 2.8 5.4z"/></svg>Element buff (by element)</span></div>
     <div class="legend"><span class="step"><b>R5</b><span>unlocked at your cap</span></span><span class="step locked"><b>R9</b><span>needs a higher rarity</span></span><span class="step up"><b>R8</b><span>level-up of a skill it already has</span></span></div>
     <div class="dbbar">
       <input id="dbq" type="search" placeholder="Search set, piece or skill (e.g. Fire Damage Up)" aria-label="Search armor">
       <select id="dbslot" aria-label="Slot"><option value="">All slots</option><option value="head">Head</option><option value="chest">Chest</option><option value="arms">Arms</option><option value="waist">Waist</option><option value="legs">Legs</option></select>
+      <select id="dbcat" aria-label="Skill type"><option value="">All skill types</option><option value="off">Offensive</option><option value="def">Defensive</option><option value="qol">QoL</option><option value="elem">Element buff</option></select>
       <select id="dbavail" aria-label="Availability"><option value="">All rarities</option><option value="cap">Usable at my cap</option></select>
     </div>
     <div class="dbwrap"><table id="db"><thead><tr><th>Piece</th><th>Set</th><th>Slot</th><th>From</th><th>Skills by rarity</th></tr></thead><tbody></tbody></table></div>
     <p class="note" id="dbcount" style="margin:0"></p>
+    </div>
   </section>
 
   <section class="panel" aria-labelledby="lad-h">
@@ -253,6 +269,23 @@ const SLOTS=["head","chest","arms","waist","legs"];
 const SLOTNAME={head:"Head",chest:"Chest",arms:"Arms",waist:"Waist",legs:"Legs"};
 const AR_CAP=[[1,2],[16,3],[18,4],[21,5],[26,6],[31,7],[34,8],[41,9],[44,10],[47,11]];
 const ELEM={"Fire Damage Up":"fire","Water Damage Up":"water","Thunder Damage Up":"thunder","Ice Damage Up":"ice","Dragon Damage Up":"dragon"};
+const CAT_NAME={off:"Offensive",def:"Defensive",qol:"QoL",elem:"Element buff"};
+const CAT_VAR={off:"--c-off",def:"--c-def",qol:"--c-qol",elem:"--dragon"};
+const CATS={
+ elem:["Fire Damage Up","Water Damage Up","Thunder Damage Up","Ice Damage Up","Dragon Damage Up"],
+ def:["Adversity","Blast Resistance","Bleeding Resistance","Blessing","Defense Up","Dragon Resistance","Fire Resistance","Flinching-Free","Grace Under Pressure","Guard Technique","Health Boost","Health Cycle","Health Recovery","Ice Resistance","Improviser","Iron Skin","Muck Resistance","Paralysis Resistance","Poison Resistance","Recovery Booster","Roar Resistance","Sleep Resistance","Stun Resistance","Suppression Recovery","Thunder Resistance","Tremor Resistance","Water Resistance","Windproof"],
+ qol:["Botanical Expert","Capturing Expert","Carve Master","Deterrence","Gathering Master","Geo Expert","Guild Might - Coil","Guild Might - Gauntlets","Guild Might - Greaves","Guild Might - Helm","Guild Might - Mail","Honey Harvester","Item Master","Master Climber","Quick-Bite","Specimen Expert","Thrifty Meal","Unflinching Carver"]};
+const CATOF={}; for(const c in CATS) CATS[c].forEach(s=>CATOF[s]=c);
+const catOf=s=>CATOF[s]||"off"; // everything else boosts damage or hit rate
+const ELEM_ICON={
+ fire:'<path fill="currentColor" d="M8 1.2c0 2.6-3.7 4.1-3.7 7.8a3.7 3.7 0 0 0 7.4 0c0-1.8-.8-2.8-1.7-3.7-.2 1.1-.7 1.6-1.3 1.8C8.8 5.4 8.6 3.2 8 1.2z"/>',
+ water:'<path fill="currentColor" d="M8 1.3C6.2 4.7 3.9 6.9 3.9 9.6a4.1 4.1 0 0 0 8.2 0C12.1 6.9 9.8 4.7 8 1.3z"/>',
+ thunder:'<path fill="currentColor" d="M9.6 .9 3.9 9h3.6l-1 6.1L12.1 7H8.5z"/>',
+ ice:'<path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" d="M8 1.6v12.8M2.5 4.8l11 6.4M2.5 11.2l11-6.4"/>',
+ dragon:'<path fill="currentColor" d="M8 1.2 13.2 5.4 11.2 14.6 8 12.4 4.8 14.6 2.8 5.4z"/>'};
+const elemIcon=e=>`<svg class="eico" viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" style="color:var(--${e})">${ELEM_ICON[e]}</svg>`;
+const catDot=s=>{ if(ELEM[s]) return `<span class="eicow" title="${ELEM[s][0].toUpperCase()+ELEM[s].slice(1)} damage buff">${elemIcon(ELEM[s])}</span>`;
+  const c=catOf(s); return `<span class="cdot" style="background:var(${CAT_VAR[c]})" title="${CAT_NAME[c]}"></span>`};
 const ELEM_N=[0,3,6,9,12,16,20,28], ELEM_R=[0,8,15,23,30,40,50,70];
 const KNOWN={"Breaker":l=>`Part damage ×${(1+0.1*l).toFixed(1)}`,"Radiant Sense":l=>`+${[0,4,8,13,18,25][l]}% dmg in Radiant Rage`,"Wrecker":l=>`+${[0,3,7,11,16][l]}% dmg 60s after stagger/break`,"Health Cycle":l=>`Heal ${[0,2,3,4][l]} on broken parts (8s CD)`};
 const PRESETS=[["Fire","Fire Damage Up"],["Water","Water Damage Up"],["Thunder","Thunder Damage Up"],["Ice","Ice Damage Up"],["Dragon","Dragon Damage Up"],["Breaker","Breaker"],["Health Cycle","Health Cycle"],["Radiant Sense","Radiant Sense"]];
@@ -351,17 +384,28 @@ try{const s=JSON.parse(localStorage.getItem("forge3")||"null"); if(s){R=s.R||R; 
 REQS=REQS.map(q=>q.slice(0,isSet(q)?3:2));
 const save=()=>{try{localStorage.setItem("forge3",JSON.stringify({R,Q:REQS,B:BUILD}))}catch(e){}};
 
+let RECENT=[]; try{RECENT=(JSON.parse(localStorage.getItem("forge3recent")||"[]")||[]).filter(x=>ALLSKILLS.includes(x)).slice(0,8)}catch(e){}
+function pushRecent(sk){ RECENT=[sk,...RECENT.filter(x=>x!==sk)].slice(0,8); try{localStorage.setItem("forge3recent",JSON.stringify(RECENT))}catch(e){} drawRecent() }
+function drawRecent(){
+  const box=$("presets"); box.innerHTML="";
+  if(!RECENT.length){ box.innerHTML=`<span class="note">Skills you pick will show up here for one-tap adding.</span>`; return }
+  RECENT.forEach(sk=>{ const b=document.createElement("button"); b.type="button";
+    b.title=`Add ${sk} at max level`; b.innerHTML=`<span class="chip">${catDot(sk)}${esc(sk)} ${maxOf(sk)}</span>`;
+    b.onclick=()=>{const i=REQS.findIndex(q=>q[0]===sk&&!isSet(q)); if(i>=0) REQS[i][1]=maxOf(sk); else REQS.push([sk,maxOf(sk)]); pushRecent(sk); drawReqs(); run()};
+    box.appendChild(b)});
+}
 function initControls(){
   const rs=$("rar"); for(let r=1;r<=11;r++){const o=document.createElement("option");o.value=r;o.textContent=`Rarity ${r}`+(arFor(r)?` (AR ${arFor(r)}+)`:"");rs.appendChild(o)}
   rs.value=R; if(R!==7){const a=arFor(R); if(a) $("ar").value=a}
   $("ar").addEventListener("input",()=>{const v=+$("ar").value||1; let r=2; AR_CAP.forEach(([a,c])=>{if(v>=a) r=c}); setR(r)});
   rs.addEventListener("change",()=>{setR(+rs.value); const a=arFor(R); if(a) $("ar").value=a});
-  PRESETS.forEach(([n,s])=>{const b=document.createElement("button"); const e=ELEM[s];
-    b.innerHTML=`<span class="chip"><span class="dot" style="background:var(--${e||"accent"})"></span>${esc(n)} ${maxOf(s)}</span>`;
-    b.onclick=()=>{const i=REQS.findIndex(q=>q[0]===s&&!isSet(q)); if(i>=0) REQS[i][1]=maxOf(s); else REQS.push([s,maxOf(s)]); drawReqs(); run()};
-    $("presets").appendChild(b)});
+  drawRecent();
   $("addreq").onclick=()=>{REQS.push([ALLSKILLS.find(s=>!REQS.some(q=>q[0]===s&&!isSet(q))),1]); drawReqs(); openPicker(REQS.length-1,"skill")};
   $("addset").onclick=()=>{REQS.push([SETSKILLS.find(x=>!REQS.some(q=>isSet(q)&&q[0]===x.set)).set,0,"set"]); drawReqs(); openPicker(REQS.length-1,"set")};
+  const setDB=(open,keep=true)=>{ $("dbbody").hidden=!open; $("dbtoggle").textContent=open?"Hide":"Show"; $("dbtoggle").setAttribute("aria-expanded",open); if(keep){try{localStorage.setItem("forge3db",open?"1":"0")}catch(e){}} };
+  $("dbtoggle").onclick=()=>setDB($("dbbody").hidden);
+  $("db-h").onclick=()=>setDB($("dbbody").hidden); $("db-h").style.cursor="pointer";
+  let dbOpen=false; try{dbOpen=localStorage.getItem("forge3db")==="1"}catch(e){} setDB(dbOpen,false);
   $("resetb").onclick=()=>{BUILD=[null,null,null,null,null]; drawSlots(); save()};
   $("clearreq").onclick=()=>{REQS=[]; drawReqs(); run()};
   $("run").onclick=run;
@@ -406,7 +450,7 @@ function drawReqs(){
     const row=document.createElement("div"); row.className="req";
     const btn=document.createElement("button"); btn.className="pick"; btn.id="req-s"+i; btn.type="button";
     btn.setAttribute("aria-haspopup","listbox"); btn.title=isSet(q)?setTip(q[0]):skillTip(q[0]);
-    btn.innerHTML=`<span class="kind ${isSet(q)?"set":""}">${isSet(q)?"Set":"Skill"}</span><span class="pname">${esc(qLabel(q))}</span><span aria-hidden="true">▾</span>`;
+    btn.innerHTML=`<span class="kind ${isSet(q)?"set":""}">${isSet(q)?"Set":"Skill"}</span><span class="pname">${isSet(q)?"":catDot(q[0])}${esc(qLabel(q))}</span><span aria-hidden="true">▾</span>`;
     btn.onclick=()=>openPicker(i,isSet(q)?"set":"skill");
     let lv;
     if(isSet(q)){ lv=document.createElement("span"); lv.className="pcs"; lv.textContent=`${tgt(q)} pcs`; lv.title=`Needs ${tgt(q)} ${q[0]} pieces`; }
@@ -433,11 +477,13 @@ function drawReqs(){
 }
 // Searchable picker with descriptions (hover or arrow keys to preview)
 let PICK=null;
+let PCAT="";
 function openPicker(i,mode){
   closePicker();
   const row=$("req-s"+i).parentElement;
   const pop=document.createElement("div"); pop.className="picker"; pop.setAttribute("role","dialog"); pop.setAttribute("aria-label","Choose a skill or set effect");
   pop.innerHTML=`<div class="ptabs" role="tablist"><button type="button" data-m="skill" role="tab">Skills</button><button type="button" data-m="set" role="tab">Set effects</button></div>
+    <div class="cats" id="pcats" role="group" aria-label="Skill type"></div>
     <input type="search" class="pq" id="pq" placeholder="Search…" aria-label="Search">
     <ul class="plist" role="listbox" id="plist"></ul>
     <div class="pdesc" id="pdesc" aria-live="polite"></div>`;
@@ -447,20 +493,27 @@ function openPicker(i,mode){
   qi.onkeydown=e=>{ if(e.key==="ArrowDown"){PICK.hi=Math.min(PICK.hi+1,PICK.items.length-1);hiPicker();e.preventDefault()}
     else if(e.key==="ArrowUp"){PICK.hi=Math.max(PICK.hi-1,0);hiPicker();e.preventDefault()}
     else if(e.key==="Enter"){choosePicker(PICK.hi);e.preventDefault()} else if(e.key==="Escape"){closePicker()} };
-  fillPicker(); setTimeout(()=>qi.focus(),0);
+  fillPicker(); const touch=window.matchMedia&&matchMedia("(pointer:coarse)").matches; if(!touch) setTimeout(()=>qi.focus(),0);
+  // bring the picker (with its search bar) to the middle of the screen so there is no hunting for it
+  requestAnimationFrame(()=>{ if(PICK&&PICK.pop===pop) pop.scrollIntoView({block:"center",behavior:"smooth"}) });
 }
 function fillPicker(){
   const {pop,mode}=PICK; const q=pop.querySelector(".pq").value.trim().toLowerCase();
   pop.querySelectorAll(".ptabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.m===mode));
   PICK.items = mode==="skill"
-    ? ALLSKILLS.filter(s=>!q||s.toLowerCase().includes(q)||descOf(s).toLowerCase().includes(q)).map(s=>({v:s,name:s,sub:`Max Lv ${maxOf(s)}`,desc:descOf(s),lv:s,short:compactLevels(s)}))
+    ? ALLSKILLS.filter(s=>(!PCAT||catOf(s)===PCAT)&&(!q||s.toLowerCase().includes(q)||descOf(s).toLowerCase().includes(q))).map(s=>({v:s,name:s,cat:catDot(s),sub:`Max Lv ${maxOf(s)}`,desc:descOf(s),lv:s,short:compactLevels(s)}))
     : SETSKILLS.filter(x=>!q||x.name.toLowerCase().includes(q)||x.set.toLowerCase().includes(q)||(x.e||"").toLowerCase().includes(q)).map(x=>({v:x.set,name:x.name,sub:`${x.set} · ${x.p||"?"} pcs`,desc:`Wear ${x.p||"?"} ${x.set} pieces. ${x.e||""}`,short:x.g.map(g=>g[0]+" +"+g[1]).join(", ")}));
   const cur=REQS[PICK.i]; const curV=cur&&((mode==="set")===isSet(cur))?cur[0]:null;
   const ci=PICK.items.findIndex(it=>it.v===curV); if(ci>=0&&!q) PICK.hi=ci;
+  const cb=pop.querySelector("#pcats"); cb.hidden=mode!=="skill";
+  cb.innerHTML=[["","All"],...Object.keys(CAT_NAME).map(c=>[c,CAT_NAME[c]])].map(([c,n])=>`<button type="button" data-c="${c}" aria-pressed="${PCAT===c}">${c==="elem"?elemIcon("fire"):c?`<span class="cdot" style="background:var(${CAT_VAR[c]})"></span>`:""}${n}</button>`).join("");
+  cb.querySelectorAll("button").forEach(b=>b.onclick=()=>{const qi2=pop.querySelector(".pq"); if(document.activeElement===qi2) qi2.blur(); PCAT=b.dataset.c; PICK.hi=0; fillPicker()});
+  PICK.armed=null;
   const ul=pop.querySelector(".plist");
-  ul.innerHTML=PICK.items.length?PICK.items.map((it,k)=>`<li role="option" data-k="${k}" id="popt${k}"><span class="pn">${esc(it.name)}</span><span class="ps">${esc(it.sub)}</span><span class="pd">${esc(it.short)}</span></li>`).join(""):`<li class="empty">No match. Try another word.</li>`;
+  ul.innerHTML=PICK.items.length?PICK.items.map((it,k)=>`<li role="option" data-k="${k}" id="popt${k}"><span class="pn">${it.cat||""}${esc(it.name)}</span><span class="ps">${esc(it.sub)}</span><span class="pd">${esc(it.short)}</span></li>`).join(""):`<li class="empty">No match. Try another word.</li>`;
   ul.querySelectorAll("li[data-k]").forEach(li=>{const k=+li.dataset.k;
-    li.onmouseenter=()=>{PICK.hi=k;hiPicker(false)}; li.onclick=()=>choosePicker(k)});
+    li.onmouseenter=()=>{PICK.hi=k;hiPicker(false)};
+    li.onclick=()=>{ if(PICK.armed===k){choosePicker(k)} else {PICK.armed=k; PICK.hi=k; hiPicker(false)} }});
   hiPicker();
 }
 function hiPicker(scroll=true){
@@ -475,13 +528,14 @@ function choosePicker(k){
   REQS[i]=PICK.mode==="set"?[it.v,0,"set"]:[it.v,Math.min(REQS[i]&&!isSet(REQS[i])?REQS[i][1]:maxOf(it.v),maxOf(it.v)),undefined];
   if(REQS[i][2]===undefined) REQS[i].length=2;
   if(wasOpt){ if(REQS[i][2]===undefined) REQS[i][2]=null; REQS[i][3]="opt"; }
+  if(PICK.mode==="skill") pushRecent(it.v);
   closePicker(); drawReqs(); $("req-s"+i).focus();
 }
 function closePicker(){ if(PICK){PICK.pop.remove(); PICK=null} }
 document.addEventListener("pointerdown",e=>{ if(PICK && !PICK.pop.contains(e.target) && !e.target.closest(".pick")) closePicker() });
 function setR(r){R=r; $("rar").value=r; $("rbadge").textContent="R"+r; drawSlots(); run(); save()}
 
-function reqSummary(ev){return REQS.map((q,i)=>{const v=val(ev,q), t=tgt(q); return `<span class="tag ${v>=t?"hi":"miss"}" title="${esc(isSet(q)?setTip(q[0]):skillTip(q[0]))}">P${i+1} ${esc(qLabel(q))} ${v}/${t}${isSet(q)?" pcs":""}</span>`}).join("")}
+function reqSummary(ev){return REQS.map((q,i)=>{const v=val(ev,q), t=tgt(q); return `<span class="tag ${v>=t?"hi":"miss"}" title="${esc(isSet(q)?setTip(q[0]):skillTip(q[0]))}">P${i+1} ${isSet(q)?"":catDot(q[0])}${esc(qLabel(q))} ${v}/${t}${isSet(q)?" pcs":""}</span>`}).join("")}
 function piecesLine(ids){return ids.map((id,i)=>id==null?`<span class="free">${SLOTNAME[SLOTS[i]]}: free</span>`:esc(PIECES[id].name)).join(" · ")}
 
 function run(){
@@ -519,7 +573,7 @@ function drawResults(){
   const list=[...src].sort(mode==="free"?(a,b)=>(exact?lexCmp(a,b):a.short-b.short)||freeOf(b)-freeOf(a)||extraOf(b)-extraOf(a):mode==="extra"?(a,b)=>(exact?lexCmp(a,b):a.short-b.short)||extraOf(b)-extraOf(a)||freeOf(b)-freeOf(a):(a,b)=>exact?lexCmp(a,b)||freeOf(b)-freeOf(a):nearCmp(a,b));
   list.slice(0,SHOWN).forEach((b,i)=>{
     const d=document.createElement("div"); d.className="res";
-    const others=Object.entries(b.ev.tot).filter(([s])=>!REQS.some(q=>q[0]===s)).sort((x,y)=>y[1]-x[1]).map(([s,l])=>`<span class="tag" title="${esc(skillTip(s))}">${esc(s)} ${l}</span>`).join("");
+    const others=Object.entries(b.ev.tot).filter(([s])=>!REQS.some(q=>q[0]===s)).sort((x,y)=>y[1]-x[1]).map(([s,l])=>`<span class="tag" title="${esc(skillTip(s))}">${catDot(s)}${esc(s)} ${l}</span>`).join("");
     const f=freeOf(b);
     const head=exact?`Set ${i+1}`:`${b.short} short`;
     d.innerHTML=`<div class="res-head"><strong>${head}${f?` · ${f} free slot${f>1?"s":""}`:""}</strong><button>Load into builder</button></div>
@@ -556,7 +610,7 @@ function drawTotals(){
   const tb=$("totals").querySelector("tbody");
   const rows=Object.entries(ev.tot).sort((a,b)=>isReq(b[0])-isReq(a[0])||b[1]-a[1]);
   tb.innerHTML=rows.length?rows.map(([s,l])=>{const mx=maxOf(s); const over=ev.raw[s]>mx; const e=ELEM[s];
-    return `<tr title="${esc(skillTip(s))}"><td>${e?`<span class="dot" style="background:var(--${e})"></span> `:""}${isReq(s)?"<strong>"+esc(s)+"</strong>":esc(s)}</td><td class="num">${l}/${mx}${over?' <span title="Extra levels are wasted" style="color:var(--warn)">capped</span>':""}</td><td><div class="bar"><i style="width:${100*l/mx}%"></i></div></td><td class="note eff">${compactHTML(s,l)}</td></tr>`}).join(""):`<tr><td colspan="4" class="empty">Choose pieces, or load a set from the search.</td></tr>`;
+    return `<tr title="${esc(skillTip(s))}"><td>${catDot(s)}${isReq(s)?"<strong>"+esc(s)+"</strong>":esc(s)}</td><td class="num">${l}/${mx}${over?' <span title="Extra levels are wasted" style="color:var(--warn)">capped</span>':""}</td><td><div class="bar"><i style="width:${100*l/mx}%"></i></div></td><td class="note eff">${compactHTML(s,l)}</td></tr>`}).join(""):`<tr><td colspan="4" class="empty">Choose pieces, or load a set from the search.</td></tr>`;
 }
 function drawLadder(){
   const tb=$("ladder").querySelector("tbody");
@@ -572,17 +626,17 @@ function progHTML(p,r){
   const seen={}; const steps={};
   p.sk.map(([s,l,f])=>[s,l,f==null?p.min:f]).sort((a,b)=>a[2]-b[2]||a[0].localeCompare(b[0])).forEach(([s,l,at])=>{
     if((seen[s]||0)>=l) return; const up=!!seen[s]; seen[s]=l; (steps[at]=steps[at]||[]).push([s,l,up])});
-  return `<div class="prog">`+Object.keys(steps).map(Number).sort((a,b)=>a-b).map(at=>steps[at].map(([s,l,up])=>`<span class="step${at>r?" locked":""}${up?" up":""}" title="${esc(s+" Lv"+l+": "+effect(s,l))}"><b>R${at}</b><span>${esc(s)} ${l}</span></span>`).join("")).join("")+`</div>`;
+  return `<div class="prog">`+Object.keys(steps).map(Number).sort((a,b)=>a-b).map(at=>steps[at].map(([s,l,up])=>`<span class="step${at>r?" locked":""}${up?" up":""}" title="${esc(s+" Lv"+l+": "+effect(s,l))}"><b>R${at}</b><span>${catDot(s)}${esc(s)} ${l}</span></span>`).join("")).join("")+`</div>`;
 }
 const SLOTORD={head:0,chest:1,arms:2,waist:3,legs:4};
 function drawDB(){
-  const q=$("dbq").value.trim().toLowerCase(), sl=$("dbslot").value, cap=$("dbavail").value==="cap";
-  const rows=PIECES.filter(p=>(!sl||p.slot===sl)&&(!cap||p.min<=R)&&(!q||p.name.toLowerCase().includes(q)||p.set.toLowerCase().includes(q)||p.sk.some(k=>k[0].toLowerCase().includes(q))))
+  const q=$("dbq").value.trim().toLowerCase(), sl=$("dbslot").value, cap=$("dbavail").value==="cap", ct=$("dbcat").value;
+  const rows=PIECES.filter(p=>(!sl||p.slot===sl)&&(!cap||p.min<=R)&&(!ct||p.sk.some(k=>catOf(k[0])===ct))&&(!q||p.name.toLowerCase().includes(q)||p.set.toLowerCase().includes(q)||p.sk.some(k=>k[0].toLowerCase().includes(q))))
     .sort((a,b)=>a.set.localeCompare(b.set)||SLOTORD[a.slot]-SLOTORD[b.slot]);
   $("db").querySelector("tbody").innerHTML=rows.length?rows.map(p=>`<tr><td><strong>${esc(p.name)}</strong></td><td>${esc(p.set)}</td><td>${SLOTNAME[p.slot]}</td><td class="num">R${p.min}</td><td>${progHTML(p,R)}</td></tr>`).join(""):`<tr><td colspan="5" class="empty">No pieces match. Try another search.</td></tr>`;
   $("dbcount").textContent=`${rows.length} of ${PIECES.length} pieces`;
 }
-["dbq","dbslot","dbavail"].forEach(id=>$(id).addEventListener("input",drawDB));
+["dbq","dbslot","dbcat","dbavail"].forEach(id=>$(id).addEventListener("input",drawDB));
 const _setR=setR; setR=function(r){_setR(r); drawDB()};
 initControls(); $("rbadge").textContent="R"+R; drawSlots(); run(); drawDB();
 </script>
