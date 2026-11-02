@@ -99,6 +99,9 @@ tr.cur td{background:var(--accent-soft)}
 .req{display:grid;grid-template-columns:minmax(0,1fr) 86px auto;gap:8px}
 .tag.miss{background:transparent;border:1px solid var(--warn);color:var(--warn)}
 .free{color:var(--accent);font-style:italic}
+.prio-chk{grid-column:1/-1;display:flex;align-items:center;gap:6px;font-size:.8rem;color:var(--muted);cursor:pointer;min-height:28px}
+.prio-chk input{width:18px;height:18px;accent-color:var(--accent);margin:0}
+.tag.opt{font-style:italic}
 .verdict{border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:6px}
 .verdict.ok{background:color-mix(in srgb,var(--good) 14%,transparent);border:1px solid var(--good)}
 .verdict.no{background:color-mix(in srgb,var(--warn) 12%,transparent);border:1px solid var(--warn)}
@@ -279,14 +282,18 @@ function evalBuild(ids,r){
 // Exhaustive search over pieces that can matter for the requirements; null = free slot.
 // A requirement is [name, level] for a skill, or [setName, 0, "set"] for an armor set effect.
 const isSet=q=>q[2]==="set";
+const isOpt=q=>q[3]==="opt"; // unchecked "Must have" = nice to have
+const niceVal=(ev,reqs)=>reqs.reduce((a,q)=>a+(isOpt(q)?val(ev,q):0),0);
 const tgt=q=>isSet(q)?(SETS[q[0]].k.p||1):q[1];
 const val=(ev,q)=>isSet(q)?Math.min(ev.cnt[q[0]]||0,tgt(q)):Math.min(ev.tot[q[0]]||0,q[1]);
 const qLabel=q=>isSet(q)?(SETS[q[0]].k.n||q[0]):q[0];
 const meets=(ev,reqs)=>reqs.every(q=>val(ev,q)>=tgt(q));
-function search(r,reqs,cap=HARD_CAP){
-  const S=reqs.filter(q=>!isSet(q)).map(q=>q[0]);
+function search(r,allReqs,cap=HARD_CAP){
+  const reqs=allReqs.filter(q=>!isOpt(q)), nice=allReqs.filter(isOpt);
+  const niceSum=ev=>nice.reduce((a,q)=>a+val(ev,q),0);
+  const S=allReqs.filter(q=>!isSet(q)).map(q=>q[0]);
   const setHelps=new Set(DATA.sets.filter(s=>s.k.g.some(g=>S.includes(g[0]))).map(s=>s.s));
-  reqs.filter(isSet).forEach(q=>setHelps.add(q[0]));
+  allReqs.filter(isSet).forEach(q=>setHelps.add(q[0]));
   const cands=SLOTS.map(slot=>[null,...PIECES.filter(p=>p.slot===slot && p.min<=r && (S.some(s=>pieceSkills(p,r)[s]) || setHelps.has(p.set))).map(p=>p.id)]);
   const found=[]; let total=0; const cur=[]; let near=[];
   const got=ev=>reqs.map(q=>val(ev,q));
@@ -296,7 +303,8 @@ function search(r,reqs,cap=HARD_CAP){
       const ev=evalBuild(cur,r);
       if(meets(ev,reqs)){
         // keep only minimal sets: removing any used piece must break a requirement
-        for(let j=0;j<5;j++){ if(cur[j]==null) continue; const t=[...cur]; t[j]=null; if(meets(evalBuild(t,r),reqs)) return; }
+        const ns=niceSum(ev);
+        for(let j=0;j<5;j++){ if(cur[j]==null) continue; const t=[...cur]; t[j]=null; const e2=evalBuild(t,r); if(meets(e2,reqs)&&niceSum(e2)>=ns) return; }
         total++; if(found.length<cap) found.push({ids:[...cur],ev});
       } else {
         // closest sets: keep minimal ones (every used piece adds to a requirement)
@@ -324,6 +332,7 @@ const $=id=>document.getElementById(id);
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const arFor=r=>{if(r<3) return null; const x=AR_CAP.find(a=>a[1]===r); return x?x[0]:null};
 const extraOf=b=>Object.values(b.ev.tot).reduce((a,c)=>a+c,0);
+const niceOf=b=>niceVal(b.ev,REQS);
 const freeOf=b=>b.ids.filter(x=>x==null).length;
 
 let R=7, REQS=[["Fire Damage Up",7],["Breaker",3]], BUILD=[null,null,null,null,null], RES=null, SHOWN=PAGE;
@@ -398,7 +407,12 @@ function drawReqs(){
     row.append(btn,lv,x);
     const hint=document.createElement("div"); hint.className="hint";
     hint.textContent=isSet(q)?(SETS[q[0]].k.e||""):`Lv${q[1]}: ${effect(q[0],q[1])}`;
-    row.appendChild(hint); box.appendChild(row)});
+    row.appendChild(hint);
+    const pr=document.createElement("label"); pr.className="prio-chk";
+    const cb=document.createElement("input"); cb.type="checkbox"; cb.checked=!isOpt(q);
+    cb.onchange=()=>{ if(cb.checked){ if(isSet(q)) q.length=3; else q.length=2 } else { if(q[2]===undefined) q[2]=null; q[3]="opt" } drawReqs(); run() };
+    pr.append(cb,document.createTextNode(" Must have (untick = nice to have)"));
+    row.appendChild(pr); box.appendChild(row)});
   save();
 }
 // Searchable picker with descriptions (hover or arrow keys to preview)
@@ -441,15 +455,17 @@ function hiPicker(scroll=true){
 }
 function choosePicker(k){
   const it=PICK.items[k]; if(!it) return; const i=PICK.i;
+  const wasOpt=REQS[i]&&isOpt(REQS[i]);
   REQS[i]=PICK.mode==="set"?[it.v,0,"set"]:[it.v,Math.min(REQS[i]&&!isSet(REQS[i])?REQS[i][1]:maxOf(it.v),maxOf(it.v)),undefined];
   if(REQS[i][2]===undefined) REQS[i].length=2;
+  if(wasOpt){ if(REQS[i][2]===undefined) REQS[i][2]=null; REQS[i][3]="opt"; }
   closePicker(); drawReqs(); $("req-s"+i).focus();
 }
 function closePicker(){ if(PICK){PICK.pop.remove(); PICK=null} }
 document.addEventListener("pointerdown",e=>{ if(PICK && !PICK.pop.contains(e.target) && !e.target.closest(".pick")) closePicker() });
 function setR(r){R=r; $("rar").value=r; $("rbadge").textContent="R"+r; drawSlots(); run(); save()}
 
-function reqSummary(ev){return REQS.map(q=>{const v=val(ev,q), t=tgt(q); return `<span class="tag ${v>=t?"hi":"miss"}" title="${esc(isSet(q)?setTip(q[0]):skillTip(q[0]))}">${esc(qLabel(q))} ${v}/${t}${isSet(q)?" pcs":""}</span>`}).join("")}
+function reqSummary(ev){return REQS.map(q=>{const v=val(ev,q), t=tgt(q); return `<span class="tag ${v>=t?"hi":"miss"}${isOpt(q)?" opt":""}" title="${esc(isSet(q)?setTip(q[0]):skillTip(q[0]))}">${isOpt(q)?"☆ ":""}${esc(qLabel(q))} ${v}/${t}${isSet(q)?" pcs":""}</span>`}).join("")}
 function piecesLine(ids){return ids.map((id,i)=>id==null?`<span class="free">${SLOTNAME[SLOTS[i]]}: free</span>`:esc(PIECES[id].name)).join(" · ")}
 
 function run(){
@@ -458,7 +474,7 @@ function run(){
   const t0=performance.now(); RES=search(R,REQS); const ms=Math.round(performance.now()-t0); SHOWN=PAGE;
   $("runinfo").textContent=`Checked every mix at rarity ${R} in ${ms} ms.`;
   if(RES.total){
-    $("verdict").innerHTML=`<div class="verdict ok"><div><strong>${RES.total.toLocaleString()} set${RES.total>1?"s":""} found</strong> at rarity ${R}${RES.total>HARD_CAP?` (showing the first ${HARD_CAP})`:""}.</div></div>`;
+    $("verdict").innerHTML=`<div class="verdict ok"><div><strong>${RES.total.toLocaleString()} set${RES.total>1?"s":""} found</strong> at rarity ${R}${RES.total>HARD_CAP?` (showing the first ${HARD_CAP})`:""}.</div>${REQS.some(isOpt)?`<div class="note">Must-haves decide the match. Sets that also hit more of your ☆ nice-to-haves are listed first.</div>`:""}</div>`;
     $("sortbox").hidden=false; drawResults();
   } else {
     let opens=null; for(let r=R+1;r<=11;r++){ if(search(r,REQS,1).total){opens=r;break} }
@@ -474,7 +490,7 @@ function run(){
 function drawResults(){
   const box=$("results"); box.innerHTML="";
   const exact=RES.total>0; const src=exact?RES.found:RES.near; const mode=$("sort").value;
-  const list=[...src].sort(mode==="free"?(a,b)=>(exact?0:a.short-b.short)||freeOf(b)-freeOf(a)||extraOf(b)-extraOf(a):mode==="extra"?(a,b)=>(exact?0:a.short-b.short)||extraOf(b)-extraOf(a)||freeOf(b)-freeOf(a):(a,b)=>exact?freeOf(b)-freeOf(a):nearCmp(a,b));
+  const list=[...src].sort(mode==="free"?(a,b)=>(exact?niceOf(b)-niceOf(a):a.short-b.short)||freeOf(b)-freeOf(a)||extraOf(b)-extraOf(a):mode==="extra"?(a,b)=>(exact?niceOf(b)-niceOf(a):a.short-b.short)||extraOf(b)-extraOf(a)||freeOf(b)-freeOf(a):(a,b)=>exact?niceOf(b)-niceOf(a)||freeOf(b)-freeOf(a):nearCmp(a,b));
   list.slice(0,SHOWN).forEach((b,i)=>{
     const d=document.createElement("div"); d.className="res";
     const others=Object.entries(b.ev.tot).filter(([s])=>!REQS.some(q=>q[0]===s)).sort((x,y)=>y[1]-x[1]).map(([s,l])=>`<span class="tag" title="${esc(skillTip(s))}">${esc(s)} ${l}</span>`).join("");
