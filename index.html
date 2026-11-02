@@ -99,8 +99,10 @@ tr.cur td{background:var(--accent-soft)}
 .req{display:grid;grid-template-columns:minmax(0,1fr) 86px auto;gap:8px}
 .tag.miss{background:transparent;border:1px solid var(--warn);color:var(--warn)}
 .free{color:var(--accent);font-style:italic}
-.prio-chk{grid-column:1/-1;display:flex;align-items:center;gap:6px;font-size:.8rem;color:var(--muted);cursor:pointer;min-height:28px}
-.prio-chk input{width:18px;height:18px;accent-color:var(--accent);margin:0}
+.prio-row{grid-column:1/-1;display:flex;align-items:center;gap:6px;font-size:.8rem;color:var(--muted)}
+.prio-row span{flex:1}
+.prio-row button{padding:2px 10px;min-height:30px}
+.prio-row button:disabled{opacity:.35;cursor:default}
 .tag.opt{font-style:italic}
 .verdict{border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:6px}
 .verdict.ok{background:color-mix(in srgb,var(--good) 14%,transparent);border:1px solid var(--good)}
@@ -213,7 +215,7 @@ tr.cur td{background:var(--accent-soft)}
     </section>
 
     <section class="panel" aria-labelledby="b-h">
-      <h2 id="b-h">Loadout builder</h2>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h2 id="b-h">Loadout builder</h2><button id="resetb" type="button">Reset</button></div>
       <p class="note" style="margin:0">Load a result, then fill any free slot with whatever piece you like. Requirements you set are checked live.</p>
       <div class="slots" id="slots"></div>
       <div id="reqcheck" class="tags"></div>
@@ -332,11 +334,21 @@ const $=id=>document.getElementById(id);
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const arFor=r=>{if(r<3) return null; const x=AR_CAP.find(a=>a[1]===r); return x?x[0]:null};
 const extraOf=b=>Object.values(b.ev.tot).reduce((a,c)=>a+c,0);
-const niceOf=b=>niceVal(b.ev,REQS);
+const asOpt=q=>{const c=[...q]; if(c[2]===undefined) c[2]=null; c[3]="opt"; return c};
+// Priority 1 first: keep each requirement (in list order) only if some set can still hit everything kept so far.
+let PLAN={keep:[],skip:[]};
+function planPriority(r,reqs){
+  const keep=[], skip=[];
+  for(const q of reqs){ if(search(r,[...keep,q],1).total) keep.push(q); else skip.push(q) }
+  return {keep,skip};
+}
+// among sets that hit the kept priorities, prefer the one that also reaches the higher-priority skipped ones
+const lexCmp=(a,b)=>{ for(const q of PLAN.skip){ const d=val(b.ev,q)-val(a.ev,q); if(d) return d } return 0 };
 const freeOf=b=>b.ids.filter(x=>x==null).length;
 
 let R=7, REQS=[["Fire Damage Up",7],["Breaker",3]], BUILD=[null,null,null,null,null], RES=null, SHOWN=PAGE;
 try{const s=JSON.parse(localStorage.getItem("forge3")||"null"); if(s){R=s.R||R; REQS=s.Q||REQS; BUILD=s.B||BUILD}}catch(e){}
+REQS=REQS.map(q=>q.slice(0,isSet(q)?3:2));
 const save=()=>{try{localStorage.setItem("forge3",JSON.stringify({R,Q:REQS,B:BUILD}))}catch(e){}};
 
 function initControls(){
@@ -350,6 +362,7 @@ function initControls(){
     $("presets").appendChild(b)});
   $("addreq").onclick=()=>{REQS.push([ALLSKILLS.find(s=>!REQS.some(q=>q[0]===s&&!isSet(q))),1]); drawReqs(); openPicker(REQS.length-1,"skill")};
   $("addset").onclick=()=>{REQS.push([SETSKILLS.find(x=>!REQS.some(q=>isSet(q)&&q[0]===x.set)).set,0,"set"]); drawReqs(); openPicker(REQS.length-1,"set")};
+  $("resetb").onclick=()=>{BUILD=[null,null,null,null,null]; drawSlots(); save()};
   $("clearreq").onclick=()=>{REQS=[]; drawReqs(); run()};
   $("run").onclick=run;
   $("sort").onchange=()=>{SHOWN=PAGE; drawResults(); $("results").scrollTop=0};
@@ -408,10 +421,13 @@ function drawReqs(){
     const hint=document.createElement("div"); hint.className="hint";
     hint.textContent=isSet(q)?(SETS[q[0]].k.e||""):`Lv${q[1]}: ${effect(q[0],q[1])}`;
     row.appendChild(hint);
-    const pr=document.createElement("label"); pr.className="prio-chk";
-    const cb=document.createElement("input"); cb.type="checkbox"; cb.checked=!isOpt(q);
-    cb.onchange=()=>{ if(cb.checked){ if(isSet(q)) q.length=3; else q.length=2 } else { if(q[2]===undefined) q[2]=null; q[3]="opt" } drawReqs(); run() };
-    pr.append(cb,document.createTextNode(" Must have (untick = nice to have)"));
+    const pr=document.createElement("div"); pr.className="prio-row";
+    const pl=document.createElement("span"); pl.textContent="Priority "+(i+1)+(i===0?" (first)":"");
+    const up=document.createElement("button"); up.textContent="↑"; up.setAttribute("aria-label","Raise priority of "+qLabel(q)); up.disabled=i===0;
+    up.onclick=()=>{[REQS[i-1],REQS[i]]=[REQS[i],REQS[i-1]]; drawReqs(); run()};
+    const dn=document.createElement("button"); dn.textContent="↓"; dn.setAttribute("aria-label","Lower priority of "+qLabel(q)); dn.disabled=i===REQS.length-1;
+    dn.onclick=()=>{[REQS[i+1],REQS[i]]=[REQS[i],REQS[i+1]]; drawReqs(); run()};
+    pr.append(pl,up,dn);
     row.appendChild(pr); box.appendChild(row)});
   save();
 }
@@ -465,16 +481,26 @@ function closePicker(){ if(PICK){PICK.pop.remove(); PICK=null} }
 document.addEventListener("pointerdown",e=>{ if(PICK && !PICK.pop.contains(e.target) && !e.target.closest(".pick")) closePicker() });
 function setR(r){R=r; $("rar").value=r; $("rbadge").textContent="R"+r; drawSlots(); run(); save()}
 
-function reqSummary(ev){return REQS.map(q=>{const v=val(ev,q), t=tgt(q); return `<span class="tag ${v>=t?"hi":"miss"}${isOpt(q)?" opt":""}" title="${esc(isSet(q)?setTip(q[0]):skillTip(q[0]))}">${isOpt(q)?"☆ ":""}${esc(qLabel(q))} ${v}/${t}${isSet(q)?" pcs":""}</span>`}).join("")}
+function reqSummary(ev){return REQS.map((q,i)=>{const v=val(ev,q), t=tgt(q); return `<span class="tag ${v>=t?"hi":"miss"}" title="${esc(isSet(q)?setTip(q[0]):skillTip(q[0]))}">P${i+1} ${esc(qLabel(q))} ${v}/${t}${isSet(q)?" pcs":""}</span>`}).join("")}
 function piecesLine(ids){return ids.map((id,i)=>id==null?`<span class="free">${SLOTNAME[SLOTS[i]]}: free</span>`:esc(PIECES[id].name)).join(" · ")}
 
 function run(){
   const box=$("results"); box.innerHTML=""; $("verdict").innerHTML=""; $("more").hidden=true; $("sortbox").hidden=true;
   if(!REQS.length){$("runinfo").textContent=""; RES=null; drawLadder(); drawTotals(); return}
-  const t0=performance.now(); RES=search(R,REQS); const ms=Math.round(performance.now()-t0); SHOWN=PAGE;
+  const t0=performance.now(); RES=search(R,REQS); PLAN={keep:REQS,skip:[]};
+  if(!RES.total){ const pl=planPriority(R,REQS); if(pl.keep.length){ PLAN=pl; RES=search(R,[...pl.keep,...pl.skip.map(asOpt)]) } }
+  const ms=Math.round(performance.now()-t0); SHOWN=PAGE;
   $("runinfo").textContent=`Checked every mix at rarity ${R} in ${ms} ms.`;
   if(RES.total){
-    $("verdict").innerHTML=`<div class="verdict ok"><div><strong>${RES.total.toLocaleString()} set${RES.total>1?"s":""} found</strong> at rarity ${R}${RES.total>HARD_CAP?` (showing the first ${HARD_CAP})`:""}.</div>${REQS.some(isOpt)?`<div class="note">Must-haves decide the match. Sets that also hit more of your ☆ nice-to-haves are listed first.</div>`:""}</div>`;
+    const n=REQS.length, pn=q=>"P"+(REQS.indexOf(q)+1)+" "+esc(qLabel(q));
+    let msg="";
+    if(PLAN.skip.length){
+      let opens=null; for(let r=R+1;r<=11;r++){ if(search(r,REQS,1).total){opens=r;break} }
+      msg=`<div>All priorities can't fit together at rarity ${R}. These sets hit ${PLAN.keep.map(pn).join(", ")}. Left out: <strong>${PLAN.skip.map(pn).join(", ")}</strong>.</div>`+
+        (opens?`<div>Everything fits at <strong>rarity ${opens}</strong>${arFor(opens)?` (AR ${arFor(opens)})`:""}. <button id="jump">Show rarity ${opens} sets</button></div>`:"");
+      setTimeout(()=>{const j=$("jump"); if(j) j.onclick=()=>{const a=arFor(opens); if(a) $("ar").value=a; setR(opens)}},0);
+    } else if(n>1) msg=`<div class="note">Every priority fits.</div>`;
+    $("verdict").innerHTML=`<div class="verdict ok"><div><strong>${RES.total.toLocaleString()} set${RES.total>1?"s":""} found</strong> at rarity ${R}${RES.total>HARD_CAP?` (showing the first ${HARD_CAP})`:""}.</div>${msg}</div>`;
     $("sortbox").hidden=false; drawResults();
   } else {
     let opens=null; for(let r=R+1;r<=11;r++){ if(search(r,REQS,1).total){opens=r;break} }
@@ -490,7 +516,7 @@ function run(){
 function drawResults(){
   const box=$("results"); box.innerHTML="";
   const exact=RES.total>0; const src=exact?RES.found:RES.near; const mode=$("sort").value;
-  const list=[...src].sort(mode==="free"?(a,b)=>(exact?niceOf(b)-niceOf(a):a.short-b.short)||freeOf(b)-freeOf(a)||extraOf(b)-extraOf(a):mode==="extra"?(a,b)=>(exact?niceOf(b)-niceOf(a):a.short-b.short)||extraOf(b)-extraOf(a)||freeOf(b)-freeOf(a):(a,b)=>exact?niceOf(b)-niceOf(a)||freeOf(b)-freeOf(a):nearCmp(a,b));
+  const list=[...src].sort(mode==="free"?(a,b)=>(exact?lexCmp(a,b):a.short-b.short)||freeOf(b)-freeOf(a)||extraOf(b)-extraOf(a):mode==="extra"?(a,b)=>(exact?lexCmp(a,b):a.short-b.short)||extraOf(b)-extraOf(a)||freeOf(b)-freeOf(a):(a,b)=>exact?lexCmp(a,b)||freeOf(b)-freeOf(a):nearCmp(a,b));
   list.slice(0,SHOWN).forEach((b,i)=>{
     const d=document.createElement("div"); d.className="res";
     const others=Object.entries(b.ev.tot).filter(([s])=>!REQS.some(q=>q[0]===s)).sort((x,y)=>y[1]-x[1]).map(([s,l])=>`<span class="tag" title="${esc(skillTip(s))}">${esc(s)} ${l}</span>`).join("");
