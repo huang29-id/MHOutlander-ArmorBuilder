@@ -86,6 +86,16 @@ button.primary{background:var(--accent);color:var(--accent-ink);border-color:var
 .step.locked{opacity:.5}
 .step.locked b{background:transparent;border:1px dashed var(--muted)}
 .step.up span{color:var(--accent);font-weight:600}
+.wctl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.wctl select{width:100%}
+.wtab th,.wtab td{vertical-align:top}
+.wtab th:first-child,.wtab td:first-child{width:34%;color:var(--muted)}
+.wtab td{font-variant-numeric:tabular-nums}
+.wtab td.best{background:color-mix(in srgb,var(--good) 16%,transparent);font-weight:600}
+.wtab .wname{font-family:var(--display);font-size:1.02rem;letter-spacing:.02em;text-transform:none;color:var(--ink);font-weight:700}
+.wsum{font-size:.86rem;line-height:1.55}
+.wlist{display:flex;flex-direction:column;gap:3px;font-size:.82rem}
+@media (max-width:640px){.wctl{grid-template-columns:minmax(0,1fr)}.wtab th:first-child,.wtab td:first-child{width:30%}}
 .dbhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .dbbody{display:flex;flex-direction:column;gap:14px}
 .dbbar{display:flex;flex-wrap:wrap;gap:8px}
@@ -238,10 +248,25 @@ tr.cur td{background:var(--accent-soft)}
     </section>
   </div>
 
+  <section class="panel" aria-labelledby="w-h">
+    <h2 id="w-h">Weapon compare</h2>
+    <p class="note" style="margin:0">Pick a weapon type and element, then two weapons. The comparison uses the armor set in your loadout builder.</p>
+    <div class="wctl">
+      <div class="field"><label for="wtype">Weapon type</label><select id="wtype"></select></div>
+      <div class="field"><label for="welem">Element</label><select id="welem"></select></div>
+      <div class="field"><label for="wa">Weapon 1</label><select id="wa"></select></div>
+      <div class="field"><label for="wb">Weapon 2</label><select id="wb"></select></div>
+    </div>
+    <div class="scroll"><table class="wtab" id="wtab"><tbody></tbody></table></div>
+    <div id="wsum" class="wsum"></div>
+    <div id="warmor" class="wlist"></div>
+    <p class="note" style="margin:0">Weapon data: fan-made list, snapshot Nov 1 2026. It has no slots, skills or element values, and the source only gives two unlabelled attack numbers. Attack = the larger number, element attack = the smaller one, total = both added (this matches every element weapon that has a Raw twin, e.g. 520 + 1,040 = 1,560; it is inferred, not stated by the source). Compare weapons of the same type only. Stats are for the fully upgraded form (max rarity); the source has no stats for lower rarities.</p>
+  </section>
+
   <section class="panel" aria-labelledby="db-h">
     <div class="dbhead"><h2 id="db-h">Armor database</h2><button id="dbtoggle" type="button" aria-expanded="false" aria-controls="dbbody">Show</button></div>
     <div id="dbbody" class="dbbody" hidden>
-    <p class="note" style="margin:0">Every piece and the rarity where each skill level unlocks. Steps above your rarity cap are faded.</p>
+    <p class="note" style="margin:0">Every piece and the rarity where each skill level unlocks. Steps above your rarity cap are faded. Some sets need more AR than the usual table (for example Radiant Anjanath R8 needs AR 36).</p>
     <div class="legend"><span><span class="cdot" style="background:var(--c-off)"></span>Offensive</span><span><span class="cdot" style="background:var(--c-def)"></span>Defensive</span><span><span class="cdot" style="background:var(--c-qol)"></span>QoL</span><span><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" style="color:var(--fire);margin-right:2px;vertical-align:middle"><path fill="currentColor" d="M8 1.2c0 2.6-3.7 4.1-3.7 7.8a3.7 3.7 0 0 0 7.4 0c0-1.8-.8-2.8-1.7-3.7-.2 1.1-.7 1.6-1.3 1.8C8.8 5.4 8.6 3.2 8 1.2z"/></svg><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" style="color:var(--water);margin-right:2px;vertical-align:middle"><path fill="currentColor" d="M8 1.3C6.2 4.7 3.9 6.9 3.9 9.6a4.1 4.1 0 0 0 8.2 0C12.1 6.9 9.8 4.7 8 1.3z"/></svg><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" style="color:var(--thunder);margin-right:2px;vertical-align:middle"><path fill="currentColor" d="M9.6 .9 3.9 9h3.6l-1 6.1L12.1 7H8.5z"/></svg><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" style="color:var(--ice);margin-right:2px;vertical-align:middle"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" d="M8 1.6v12.8M2.5 4.8l11 6.4M2.5 11.2l11-6.4"/></svg><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" style="color:var(--dragon);margin-right:2px;vertical-align:middle"><path fill="currentColor" d="M8 1.2 13.2 5.4 11.2 14.6 8 12.4 4.8 14.6 2.8 5.4z"/></svg>Element buff (by element)</span></div>
     <div class="legend"><span class="step"><b>R5</b><span>unlocked at your cap</span></span><span class="step locked"><b>R9</b><span>needs a higher rarity</span></span><span class="step up"><b>R8</b><span>level-up of a skill it already has</span></span></div>
     <div class="dbbar">
@@ -303,7 +328,7 @@ const maxOf=s=>(DATA.skills[s]||[3])[0]||3;
 const descOf=s=>(DATA.skills[s]||[0,""])[1]||"";
 const PS={}; // cache piece skills per rarity
 function pieceSkills(p,r){
-  if(r<p.min) return null; const key=p.id+"_"+r; if(PS[key]) return PS[key];
+  r=effR(p,r); if(r<p.min) return null; const key=p.id+"_"+r; if(PS[key]) return PS[key];
   const m={}; p.sk.forEach(([s,l,f])=>{const at=f==null?p.min:f; if(at<=r) m[s]=Math.max(m[s]||0,l)}); return PS[key]=m;
 }
 function evalBuild(ids,r){
@@ -331,7 +356,7 @@ function search(r,allReqs,cap=HARD_CAP){
   const S=allReqs.filter(q=>!isSet(q)).map(q=>q[0]);
   const setHelps=new Set(DATA.sets.filter(s=>s.k.g.some(g=>S.includes(g[0]))).map(s=>s.s));
   allReqs.filter(isSet).forEach(q=>setHelps.add(q[0]));
-  const cands=SLOTS.map(slot=>[null,...PIECES.filter(p=>p.slot===slot && p.min<=r && (S.some(s=>pieceSkills(p,r)[s]) || setHelps.has(p.set))).map(p=>p.id)]);
+  const cands=SLOTS.map(slot=>[null,...PIECES.filter(p=>p.slot===slot && p.min<=effR(p,r) && (S.some(s=>pieceSkills(p,r)[s]) || setHelps.has(p.set))).map(p=>p.id)]);
   const found=[]; let total=0; const cur=[]; let near=[];
   const got=ev=>reqs.map(q=>val(ev,q));
   const reqSum=ev=>got(ev).reduce((a,b)=>a+b,0);
@@ -367,6 +392,12 @@ function effect(s,l){
 }
 const $=id=>document.getElementById(id);
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+// Sets that need more AR than the general table for a rarity: SETAR[set][rarity]=AR
+const SETAR={"Radiant Anjanath":{8:36}};
+const gR=v=>{let r=2; AR_CAP.forEach(([a,c])=>{if(v>=a) r=c}); return r};
+const effAR=r=>{const el=document.getElementById("ar"); const v=el?(+el.value||1):0; return v&&gR(v)===r?v:(arFor(r)||999)};
+// highest rarity this piece's set lets you reach at rarity cap r
+function effR(p,r){const n=SETAR[p.set]; if(!n) return r; const a=effAR(r); let e=r; for(const k in n){ if(r>=+k && a<n[k]) e=Math.min(e,+k-1) } return e}
 const arFor=r=>{if(r<3) return null; const x=AR_CAP.find(a=>a[1]===r); return x?x[0]:null};
 const extraOf=b=>Object.values(b.ev.tot).reduce((a,c)=>a+c,0);
 const asOpt=q=>{const c=[...q]; if(c[2]===undefined) c[2]=null; c[3]="opt"; return c};
@@ -591,7 +622,7 @@ function loadBuild(ids){BUILD=[...ids]; drawSlots(); save(); $("b-h").scrollInto
 function drawSlots(){
   const box=$("slots"); box.innerHTML="";
   SLOTS.forEach((slot,i)=>{
-    const av=PIECES.filter(p=>p.slot===slot && p.min<=R).sort((a,b)=>a.name.localeCompare(b.name));
+    const av=PIECES.filter(p=>p.slot===slot && p.min<=effR(p,R)).sort((a,b)=>a.name.localeCompare(b.name));
     if(BUILD[i]!=null && !av.some(p=>p.id===BUILD[i])) BUILD[i]=null;
     const row=document.createElement("div"); row.className="slot";
     const sel=document.createElement("select"); sel.id="slot-"+slot;
@@ -628,18 +659,387 @@ function progHTML(p,r){
   const seen={}; const steps={};
   p.sk.map(([s,l,f])=>[s,l,f==null?p.min:f]).sort((a,b)=>a[2]-b[2]||a[0].localeCompare(b[0])).forEach(([s,l,at])=>{
     if((seen[s]||0)>=l) return; const up=!!seen[s]; seen[s]=l; (steps[at]=steps[at]||[]).push([s,l,up])});
-  return `<div class="prog">`+Object.keys(steps).map(Number).sort((a,b)=>a-b).map(at=>steps[at].map(([s,l,up])=>`<span class="step${at>r?" locked":""}${up?" up":""}" title="${esc(s+" Lv"+l+": "+effect(s,l))}"><b>R${at}</b><span>${catDot(s)}${esc(s)} ${l}</span></span>`).join("")).join("")+`</div>`;
+  return `<div class="prog">`+Object.keys(steps).map(Number).sort((a,b)=>a-b).map(at=>steps[at].map(([s,l,up])=>`<span class="step${at>effR(p,r)?" locked":""}${up?" up":""}" title="${esc(s+" Lv"+l+": "+effect(s,l)+((SETAR[p.set]||{})[at]?" · needs AR "+SETAR[p.set][at]:""))}"><b>R${at}</b><span>${catDot(s)}${esc(s)} ${l}</span></span>`).join("")).join("")+`</div>`;
 }
 const SLOTORD={head:0,chest:1,arms:2,waist:3,legs:4};
 function drawDB(){
   const q=$("dbq").value.trim().toLowerCase(), sl=$("dbslot").value, cap=$("dbavail").value==="cap", ct=$("dbcat").value;
-  const rows=PIECES.filter(p=>(!sl||p.slot===sl)&&(!cap||p.min<=R)&&(!ct||p.sk.some(k=>catOf(k[0])===ct))&&(!q||p.name.toLowerCase().includes(q)||p.set.toLowerCase().includes(q)||p.sk.some(k=>k[0].toLowerCase().includes(q))))
+  const rows=PIECES.filter(p=>(!sl||p.slot===sl)&&(!cap||p.min<=effR(p,R))&&(!ct||p.sk.some(k=>catOf(k[0])===ct))&&(!q||p.name.toLowerCase().includes(q)||p.set.toLowerCase().includes(q)||p.sk.some(k=>k[0].toLowerCase().includes(q))))
     .sort((a,b)=>a.set.localeCompare(b.set)||SLOTORD[a.slot]-SLOTORD[b.slot]);
   $("db").querySelector("tbody").innerHTML=rows.length?rows.map(p=>`<tr><td><strong>${esc(p.name)}</strong></td><td>${esc(p.set)}</td><td>${SLOTNAME[p.slot]}</td><td class="num">R${p.min}</td><td>${progHTML(p,R)}</td></tr>`).join(""):`<tr><td colspan="5" class="empty">No pieces match. Try another search.</td></tr>`;
   $("dbcount").textContent=`${rows.length} of ${PIECES.length} pieces`;
 }
+
+// ---- Weapon compare ----
+const WT=[["GS","Great Sword"],["LS","Long Sword"],["DB","Dual Blades"],["HM","Hammer"],["LN","Lance"],["CB","Charge Blade"],["HB","Heavy Bowgun"],["BW","Bow"]];
+const WEAP=[["GS", "Barroth Shredder VI", "Paralysis", 631, 1262, -3, "2★–14★", "Lv 4"],
+["GS", "Blacksteel Chopper VI", "Dragon", 472, 944, 6, "6★–14★", "Lv 4"],
+["GS", "Chrome Razor VI", "Poison", 653, 1306, null, "1★–14★", "Lv 4"],
+["GS", "Datura Blaze VI", "Poison", 667, 1334, null, "1★–14★", "Lv 4"],
+["GS", "Dragonbone Cleaver VI", "Dragon", 484, 967, null, "4★–14★", "Lv 4"],
+["GS", "Flammenzahn+ VI", "Fire", 495, 989, -3, "3★–14★", "Lv 4"],
+["GS", "Frost Blaze VI", "Ice", 494, 988, null, "8★–14★", "Lv 4"],
+["GS", "Giant Jawblade VI", "Ice", 484, 967, null, "3★–14★", "Lv 4"],
+["GS", "Guild Crimson Crest Great Sword (Dragon) VI", "Dragon", 468, 936, null, "1★–14★", "Lv 4"],
+["GS", "Guild Crimson Crest Great Sword (Fire) VI", "Fire", 468, 936, null, "1★–14★", "Lv 4"],
+["GS", "Guild Crimson Crest Great Sword (Ice) VI", "Ice", 468, 936, null, "1★–14★", "Lv 4"],
+["GS", "Guild Crimson Crest Great Sword (Thunder) VI", "Thunder", 468, 936, null, "1★–14★", "Lv 4"],
+["GS", "Guild Crimson Crest Great Sword (Water) VI", "Water", 468, 936, null, "1★–14★", "Lv 4"],
+["GS", "Guild Crimson Crest Great Sword VI", "Raw", 1404, 0, null, "1★–14★", "Lv 4"],
+["GS", "Jagras Hacker VI", "Water", 484, 967, null, "1★–14★", "Lv 4"],
+["GS", "Lightning Punisher VI", "Thunder", 494, 988, null, "5★–14★", "Lv 4"],
+["GS", "Luminous Durandal", "Raw", 1560, 0, null, "9★–14★", "Lv 5"],
+["GS", "Luminous Durandal (Dragon)", "Dragon", 520, 1040, null, "9★–14★", "Lv 6"],
+["GS", "Luminous Durandal (Fire)", "Fire", 520, 1040, null, "9★–14★", "Lv 6"],
+["GS", "Luminous Durandal (Ice)", "Ice", 520, 1040, null, "9★–14★", "Lv 6"],
+["GS", "Luminous Durandal (Thunder)", "Thunder", 520, 1040, null, "9★–14★", "Lv 6"],
+["GS", "Luminous Durandal (Water)", "Water", 520, 1040, null, "9★–14★", "Lv 6"],
+["GS", "Malady's Kiss VI", "Paralysis", 579, 1158, 8, "2★–14★", "Lv 4"],
+["GS", "Radiant Barroth Shredder VI", "Paralysis", 658, 1316, -6, "5★–14★", "Lv 4"],
+["GS", "Radiant Datura Blaze VI", "Poison", 688, 1376, null, "4★–14★", "Lv 4"],
+["GS", "Radiant Flammenzahn+ VI", "Fire", 495, 989, -3, "5★–14★", "Lv 4"],
+["GS", "Radiant Frost Blaze VI", "Ice", 510, 1019, null, "11★–14★", "Lv 4"],
+["GS", "Radiant Jagras Hacker VI", "Water", 494, 988, null, "4★–14★", "Lv 4"],
+["GS", "Radiant Lightning Punisher VI", "Thunder", 510, 1019, null, "7★–14★", "Lv 4"],
+["GS", "Radiant Malady's Kiss VI", "Paralysis", 636, 1271, 3, "7★–14★", "Lv 4"],
+["GS", "Radiant Radobaan Slab VI", "Dragon", 510, 1019, null, "12★–14★", "Lv 4"],
+["GS", "Radiant Red Wing VI", "Fire", 498, 997, 3, "11★–14★", "Lv 4"],
+["GS", "Radiant Water Golem VI", "Water", 510, 1019, null, "6★–14★", "Lv 4"],
+["GS", "Radobaan Slab VI", "Sleep", 650, 1299, null, "7★–14★", "Lv 4"],
+["GS", "Red Wing VI", "Fire", 472, 944, 6, "6★–14★", "Lv 4"],
+["GS", "Water Golem VI", "Water", 484, 967, null, "2★–14★", "Lv 4"],
+["LS", "Anja Scimitar VI", "Fire", 495, 989, -3, "3★–14★", "Lv 4"],
+["LS", "Blacksteel Long Sword VI", "Dragon", 510, 1019, null, "6★–14★", "Lv 4"],
+["LS", "Bone Reaper VI", "Sleep", 630, 1260, null, "3★–14★", "Lv 4"],
+["LS", "Dark Scimitar VI", "Paralysis", 650, 1299, null, "4★–14★", "Lv 4"],
+["LS", "Dawnlit Joyeuse", "Raw", 1560, 0, null, "9★–14★", "Lv 5"],
+["LS", "Dawnlit Joyeuse (Dragon)", "Dragon", 520, 1040, null, "9★–14★", "Lv 6"],
+["LS", "Dawnlit Joyeuse (Fire)", "Fire", 520, 1040, null, "9★–14★", "Lv 6"],
+["LS", "Dawnlit Joyeuse (Ice)", "Ice", 520, 1040, null, "9★–14★", "Lv 6"],
+["LS", "Dawnlit Joyeuse (Thunder)", "Thunder", 520, 1040, null, "9★–14★", "Lv 6"],
+["LS", "Dawnlit Joyeuse (Water)", "Water", 520, 1040, null, "9★–14★", "Lv 6"],
+["LS", "Dazzling Flash VI", "Thunder", 494, 988, null, "8★–14★", "Lv 4"],
+["LS", "Dipterus VI", "Water", 494, 988, null, "2★–14★", "Lv 4"],
+["LS", "Dragonbone Stabber VI", "Dragon", 494, 988, null, "4★–14★", "Lv 4"],
+["LS", "Guild Crimson Crest Long Sword (Dragon) VI", "Dragon", 468, 936, null, "1★–14★", "Lv 4"],
+["LS", "Guild Crimson Crest Long Sword (Fire) VI", "Fire", 468, 936, null, "1★–14★", "Lv 4"],
+["LS", "Guild Crimson Crest Long Sword (Ice) VI", "Ice", 468, 936, null, "1★–14★", "Lv 4"],
+["LS", "Guild Crimson Crest Long Sword (Thunder) VI", "Thunder", 468, 936, null, "1★–14★", "Lv 4"],
+["LS", "Guild Crimson Crest Long Sword (Water) VI", "Water", 468, 936, null, "1★–14★", "Lv 4"],
+["LS", "Guild Crimson Crest Long Sword VI", "Raw", 1404, 0, null, "1★–14★", "Lv 4"],
+["LS", "Iron Gospel VI", "Water", 484, 967, null, "1★–14★", "Lv 4"],
+["LS", "Kadachi Fang VI", "Thunder", 454, 908, 8, "5★–14★", "Lv 4"],
+["LS", "Last Dance VI", "Sleep", 579, 1158, 8, "1★–14★", "Lv 4"],
+["LS", "Radiant Anja Scimitar VI", "Fire", 495, 989, -3, "5★–14★", "Lv 4"],
+["LS", "Radiant Dazzling Flash VI", "Thunder", 510, 1019, null, "10★–14★", "Lv 4"],
+["LS", "Radiant Dipterus VI", "Water", 510, 1019, null, "6★–14★", "Lv 4"],
+["LS", "Radiant Kadachi Fang VI", "Thunder", 454, 908, 8, "7★–14★", "Lv 4"],
+["LS", "Radiant Last Dance VI", "Sleep", 636, 1271, 3, "5★–14★", "Lv 4"],
+["LS", "Radiant Stealer VI", "Ice", 510, 1019, null, "11★–14★", "Lv 4"],
+["LS", "Radiant Wyvern Blade \"Blood\" VI", "Fire", 498, 997, 3, "11★–14★", "Lv 4"],
+["LS", "Radiant Wyvern Blade \"Holly\" VI", "Poison", 673, 1346, 3, "12★–14★", "Lv 4"],
+["LS", "Radiant Wyvern Blade \"Verde\" VI", "Poison", 613, 1226, 8, "3★–14★", "Lv 4"],
+["LS", "Stealer VI", "Ice", 494, 988, null, "8★–14★", "Lv 4"],
+["LS", "Wyvern Blade \"Blood\" VI", "Fire", 472, 944, 6, "6★–14★", "Lv 4"],
+["LS", "Wyvern Blade \"Holly\" VI", "Poison", 637, 1274, 6, "9★–14★", "Lv 4"],
+["LS", "Wyvern Blade \"Verde\" VI", "Poison", 613, 1226, 8, "6★–14★", "Lv 4"],
+["DB", "Anja Cyclone VI", "Fire", 495, 989, -3, "3★–14★", "Lv 4"],
+["DB", "Arcanaria VI", "Sleep", 602, 1203, 6, "1★–14★", "Lv 4"],
+["DB", "Blacksteel Twins VI", "Dragon", 484, 967, null, "6★–14★", "Lv 4"],
+["DB", "Blood-drinker Chainblade VI", "Fire", 472, 944, 6, "7★–14★", "Lv 4"],
+["DB", "Chrome Slicers VI", "Poison", 653, 1306, null, "1★–14★", "Lv 4"],
+["DB", "Dark Ripper VI", "Paralysis", 650, 1299, null, "4★–14★", "Lv 4"],
+["DB", "Diablos Clubs VI", "Ice", 539, 1078, -8, "13★–14★", "Lv 4"],
+["DB", "Diablos Hatchets VI", "Ice", 495, 989, -3, "7★–14★", "Lv 4"],
+["DB", "Dragonbone Twinblades VI", "Dragon", 484, 967, null, "4★–14★", "Lv 4"],
+["DB", "Dual Destroyers VI", "Thunder", 494, 988, null, "8★–14★", "Lv 4"],
+["DB", "Freeze Chain VI", "Ice", 484, 967, null, "8★–14★", "Lv 4"],
+["DB", "Guild Crimson Crest Dual Blades (Dragon) VI", "Dragon", 468, 936, null, "1★–14★", "Lv 4"],
+["DB", "Guild Crimson Crest Dual Blades (Fire) VI", "Fire", 468, 936, null, "1★–14★", "Lv 4"],
+["DB", "Guild Crimson Crest Dual Blades (Ice) VI", "Ice", 468, 936, null, "1★–14★", "Lv 4"],
+["DB", "Guild Crimson Crest Dual Blades (Thunder) VI", "Thunder", 468, 936, null, "1★–14★", "Lv 4"],
+["DB", "Guild Crimson Crest Dual Blades (Water) VI", "Water", 468, 936, null, "1★–14★", "Lv 4"],
+["DB", "Guild Crimson Crest Dual Blades VI", "Raw", 1404, 0, null, "1★–14★", "Lv 4"],
+["DB", "Jyura Hatchets VI", "Water", 484, 967, null, "2★–14★", "Lv 4"],
+["DB", "Kadachi Claws VI", "Thunder", 454, 908, 8, "5★–14★", "Lv 4"],
+["DB", "Lucent Hauteclaire", "Raw", 1560, 0, null, "9★–14★", "Lv 5"],
+["DB", "Lucent Hauteclaire (Dragon)", "Dragon", 520, 1040, null, "9★–14★", "Lv 6"],
+["DB", "Lucent Hauteclaire (Fire)", "Fire", 520, 1040, null, "9★–14★", "Lv 6"],
+["DB", "Lucent Hauteclaire (Ice)", "Ice", 520, 1040, null, "9★–14★", "Lv 6"],
+["DB", "Lucent Hauteclaire (Thunder)", "Thunder", 520, 1040, null, "9★–14★", "Lv 6"],
+["DB", "Lucent Hauteclaire (Water)", "Water", 520, 1040, null, "9★–14★", "Lv 6"],
+["DB", "Radiant Anja Cyclone VI", "Fire", 495, 989, -3, "5★–14★", "Lv 4"],
+["DB", "Radiant Arcanaria VI", "Sleep", 636, 1271, 3, "5★–14★", "Lv 4"],
+["DB", "Radiant Blood-drinker Chainblade VI", "Dragon", 472, 944, 6, "10★–14★", "Lv 4"],
+["DB", "Radiant Diablos Clubs VI", "Dragon", 539, 1078, -8, "14★", "Lv 5"],
+["DB", "Radiant Diablos Hatchets VI", "Water", 539, 1078, -8, "11★–14★", "Lv 4"],
+["DB", "Radiant Dual Destroyers VI", "Thunder", 510, 1019, null, "10★–14★", "Lv 4"],
+["DB", "Radiant Freeze Chain VI", "Ice", 494, 988, null, "11★–14★", "Lv 4"],
+["DB", "Radiant Jyura Hatchets VI", "Water", 494, 988, null, "6★–14★", "Lv 4"],
+["DB", "Radiant Kadachi Claws VI", "Thunder", 454, 908, 8, "7★–14★", "Lv 4"],
+["DB", "Radiant Twin Flames VI", "Fire", 498, 997, 3, "11★–14★", "Lv 4"],
+["DB", "Strong Hatchets VI", "Blast", 704, 1408, null, "3★–14★", "Lv 4"],
+["DB", "Twin Flames VI", "Poison", 673, 1346, 3, "6★–14★", "Lv 4"],
+["HM", "Anja Striker VI", "Fire", 495, 989, -3, "3★–14★", "Lv 4"],
+["HM", "Baan Strike VI", "Sleep", 650, 1299, null, "7★–14★", "Lv 4"],
+["HM", "Barroth Breaker VI", "Paralysis", 631, 1262, -3, "2★–14★", "Lv 4"],
+["HM", "Blacksteel Hammer VI", "Dragon", 484, 967, null, "6★–14★", "Lv 4"],
+["HM", "Buon Fiore VI", "Poison", 667, 1334, null, "1★–14★", "Lv 4"],
+["HM", "Crushing Beak VI", "Sleep", 579, 1158, 8, "1★–14★", "Lv 4"],
+["HM", "Diablos Shatterer VI", "Ice", 539, 1078, -8, "13★–14★", "Lv 4"],
+["HM", "Diablos Sledge VI", "Ice", 516, 1032, -6, "7★–14★", "Lv 4"],
+["HM", "Dragonbone Basher VI", "Dragon", 484, 967, null, "4★–14★", "Lv 4"],
+["HM", "Grandrock VI", "Thunder", 484, 967, null, "3★–14★", "Lv 4"],
+["HM", "Guild Crimson Crest Hammer (Dragon) VI", "Dragon", 468, 936, null, "1★–14★", "Lv 4"],
+["HM", "Guild Crimson Crest Hammer (Fire) VI", "Fire", 468, 936, null, "1★–14★", "Lv 4"],
+["HM", "Guild Crimson Crest Hammer (Ice) VI", "Ice", 468, 936, null, "1★–14★", "Lv 4"],
+["HM", "Guild Crimson Crest Hammer (Thunder) VI", "Thunder", 468, 936, null, "1★–14★", "Lv 4"],
+["HM", "Guild Crimson Crest Hammer (Water) VI", "Water", 468, 936, null, "1★–14★", "Lv 4"],
+["HM", "Guild Crimson Crest Hammer VI", "Raw", 1404, 0, null, "1★–14★", "Lv 4"],
+["HM", "Huracan Hammer VI", "Fire", 472, 944, 6, "6★–14★", "Lv 4"],
+["HM", "Iron Archdemon VI", "Blast", 704, 1408, null, "1★–14★", "Lv 4"],
+["HM", "Lightning Bash VI", "Thunder", 494, 988, null, "5★–14★", "Lv 4"],
+["HM", "Malady's Fist VI", "Paralysis", 579, 1158, 8, "2★–14★", "Lv 4"],
+["HM", "Radiant Anja Striker VI", "Fire", 495, 989, -3, "5★–14★", "Lv 4"],
+["HM", "Radiant Baan Strike VI", "Dragon", 494, 988, null, "12★–14★", "Lv 4"],
+["HM", "Radiant Barroth Breaker VI", "Paralysis", 658, 1316, -6, "5★–14★", "Lv 4"],
+["HM", "Radiant Buon Fiore VI", "Poison", 688, 1376, null, "4★–14★", "Lv 4"],
+["HM", "Radiant Crushing Beak VI", "Sleep", 602, 1203, 6, "5★–14★", "Lv 4"],
+["HM", "Radiant Diablos Shatterer VI", "Dragon", 539, 1078, -8, "14★", "Lv 5"],
+["HM", "Radiant Diablos Sledge VI", "Water", 539, 1078, -8, "11★–14★", "Lv 4"],
+["HM", "Radiant Huracan Hammer VI", "Fire", 498, 997, 3, "11★–14★", "Lv 4"],
+["HM", "Radiant Lightning Bash VI", "Thunder", 510, 1019, null, "7★–14★", "Lv 4"],
+["HM", "Radiant Malady's Fist VI", "Paralysis", 636, 1271, 3, "7★–14★", "Lv 4"],
+["HM", "Radiant Water Basher VI", "Water", 494, 988, null, "6★–14★", "Lv 4"],
+["HM", "Sonorous Olifant", "Raw", 1560, 0, null, "9★–14★", "Lv 5"],
+["HM", "Sonorous Olifant (Dragon)", "Dragon", 520, 1040, null, "9★–14★", "Lv 6"],
+["HM", "Sonorous Olifant (Fire)", "Fire", 520, 1040, null, "9★–14★", "Lv 6"],
+["HM", "Sonorous Olifant (Ice)", "Ice", 520, 1040, null, "9★–14★", "Lv 6"],
+["HM", "Sonorous Olifant (Thunder)", "Thunder", 520, 1040, null, "9★–14★", "Lv 6"],
+["HM", "Sonorous Olifant (Water)", "Water", 520, 1040, null, "9★–14★", "Lv 6"],
+["HM", "Water Basher VI", "Water", 484, 967, null, "2★–14★", "Lv 4"],
+["LN", "Barroth Stinger VI", "Paralysis", 658, 1316, -6, "2★–14★", "Lv 4"],
+["LN", "Blacksteel Lance VI", "Dragon", 494, 988, null, "6★–14★", "Lv 4"],
+["LN", "Chrome Lance VI", "Paralysis", 617, 1233, null, "1★–14★", "Lv 4"],
+["LN", "Dark Stinger VI", "Blast", 726, 1452, null, "4★–14★", "Lv 4"],
+["LN", "Datura Pike VI", "Poison", 667, 1334, null, "1★–14★", "Lv 4"],
+["LN", "Dragonbone Lance VI", "Dragon", 484, 967, null, "4★–14★", "Lv 4"],
+["LN", "Garon Dhara VI", "Fire", 472, 944, 6, "7★–14★", "Lv 4"],
+["LN", "Gleaming Curtana", "Raw", 1560, 0, null, "9★–14★", "Lv 5"],
+["LN", "Gleaming Curtana (Dragon)", "Dragon", 520, 1040, null, "9★–14★", "Lv 6"],
+["LN", "Gleaming Curtana (Fire)", "Fire", 520, 1040, null, "9★–14★", "Lv 6"],
+["LN", "Gleaming Curtana (Ice)", "Ice", 520, 1040, null, "9★–14★", "Lv 6"],
+["LN", "Gleaming Curtana (Thunder)", "Thunder", 520, 1040, null, "9★–14★", "Lv 6"],
+["LN", "Gleaming Curtana (Water)", "Water", 520, 1040, null, "9★–14★", "Lv 6"],
+["LN", "Guild Crimson Crest Lance (Dragon) VI", "Dragon", 468, 936, null, "1★–14★", "Lv 4"],
+["LN", "Guild Crimson Crest Lance (Fire) VI", "Fire", 468, 936, null, "1★–14★", "Lv 4"],
+["LN", "Guild Crimson Crest Lance (Ice) VI", "Ice", 468, 936, null, "1★–14★", "Lv 4"],
+["LN", "Guild Crimson Crest Lance (Thunder) VI", "Thunder", 468, 936, null, "1★–14★", "Lv 4"],
+["LN", "Guild Crimson Crest Lance (Water) VI", "Water", 468, 936, null, "1★–14★", "Lv 4"],
+["LN", "Guild Crimson Crest Lance VI", "Raw", 1404, 0, null, "1★–14★", "Lv 4"],
+["LN", "Heavy Bone Lance VI", "Poison", 653, 1306, null, "3★–14★", "Lv 4"],
+["LN", "Kulu Hasta VI", "Sleep", 602, 1203, 6, "1★–14★", "Lv 4"],
+["LN", "Legiana Halberd VI", "Ice", 494, 988, null, "8★–14★", "Lv 4"],
+["LN", "Lightning Spire VI", "Thunder", 494, 988, null, "5★–14★", "Lv 4"],
+["LN", "Radiant Barroth Stinger VI", "Paralysis", 688, 1375, -8, "5★–14★", "Lv 4"],
+["LN", "Radiant Datura Pike VI", "Poison", 688, 1376, null, "4★–14★", "Lv 4"],
+["LN", "Radiant Garon Dhara VI", "Dragon", 498, 997, 3, "10★–14★", "Lv 4"],
+["LN", "Radiant Kulu Hasta VI", "Sleep", 636, 1271, 3, "5★–14★", "Lv 4"],
+["LN", "Radiant Legiana Halberd VI", "Ice", 510, 1019, null, "11★–14★", "Lv 4"],
+["LN", "Radiant Lightning Spire VI", "Thunder", 510, 1019, null, "7★–14★", "Lv 4"],
+["LN", "Radiant Red Tail VI", "Fire", 498, 997, 3, "11★–14★", "Lv 4"],
+["LN", "Radiant Water Spike VI", "Water", 510, 1019, null, "6★–14★", "Lv 4"],
+["LN", "Red Tail VI", "Fire", 454, 908, 8, "6★–14★", "Lv 4"],
+["LN", "Water Spike VI", "Water", 494, 988, null, "2★–14★", "Lv 4"],
+["CB", "Axelion Blade VI", "Fire", 454, 908, 8, "6★–14★", "Lv 4"],
+["CB", "Blacksteel Charger VI", "Dragon", 484, 967, null, "6★–14★", "Lv 4"],
+["CB", "Chrome Guardian VI", "Thunder", 484, 967, null, "1★–14★", "Lv 4"],
+["CB", "Dear Hecatel VI", "Poison", 637, 1274, 6, "9★–14★", "Lv 4"],
+["CB", "Dear Lutemia VI", "Poison", 653, 1306, null, "6★–14★", "Lv 4"],
+["CB", "Diablos Tyrannis VI", "Ice", 539, 1078, -8, "13★–14★", "Lv 4"],
+["CB", "Diablos Wall VI", "Ice", 495, 989, -3, "7★–14★", "Lv 4"],
+["CB", "Dragonbone Cutter VI", "Dragon", 484, 967, null, "4★–14★", "Lv 4"],
+["CB", "Gigafrost VI", "Ice", 484, 967, null, "8★–14★", "Lv 4"],
+["CB", "Girros Nadja VI", "Paralysis", 602, 1203, 6, "2★–14★", "Lv 4"],
+["CB", "Guild Crimson Crest Charge Blade (Dragon) VI", "Dragon", 468, 936, null, "1★–14★", "Lv 4"],
+["CB", "Guild Crimson Crest Charge Blade (Fire) VI", "Fire", 468, 936, null, "1★–14★", "Lv 4"],
+["CB", "Guild Crimson Crest Charge Blade (Ice) VI", "Ice", 468, 936, null, "1★–14★", "Lv 4"],
+["CB", "Guild Crimson Crest Charge Blade (Thunder) VI", "Thunder", 468, 936, null, "1★–14★", "Lv 4"],
+["CB", "Guild Crimson Crest Charge Blade (Water) VI", "Water", 468, 936, null, "1★–14★", "Lv 4"],
+["CB", "Guild Crimson Crest Charge Blade VI", "Raw", 1404, 0, null, "1★–14★", "Lv 4"],
+["CB", "Hard Bone Strongarm VI", "Blast", 704, 1408, null, "3★–14★", "Lv 3"],
+["CB", "Hate's Undying Flame VI", "Fire", 472, 944, 6, "7★–14★", "Lv 4"],
+["CB", "Jagras Escudo VI", "Sleep", 630, 1260, null, "1★–14★", "Lv 4"],
+["CB", "Jyura Depth VI", "Water", 484, 967, null, "2★–14★", "Lv 4"],
+["CB", "Kadachi Kaina VI", "Thunder", 472, 944, 6, "5★–14★", "Lv 4"],
+["CB", "Radiant Axelion Blade VI", "Fire", 498, 997, 3, "11★–14★", "Lv 4"],
+["CB", "Radiant Dear Hecatel VI", "Poison", 673, 1346, 3, "12★–14★", "Lv 4"],
+["CB", "Radiant Dear Lutemia VI", "Poison", 653, 1306, null, "3★–14★", "Lv 4"],
+["CB", "Radiant Diablos Tyrannis VI", "Dragon", 539, 1078, -8, "14★", "Lv 5"],
+["CB", "Radiant Diablos Wall VI", "Water", 539, 1078, -8, "11★–14★", "Lv 4"],
+["CB", "Radiant Gigafrost VI", "Ice", 494, 988, null, "11★–14★", "Lv 4"],
+["CB", "Radiant Girros Nadja VI", "Paralysis", 636, 1271, 3, "7★–14★", "Lv 4"],
+["CB", "Radiant Hate's Undying Flame VI", "Dragon", 472, 944, 6, "10★–14★", "Lv 4"],
+["CB", "Radiant Jagras Escudo VI", "Sleep", 650, 1299, null, "4★–14★", "Lv 4"],
+["CB", "Radiant Jyura Depth VI", "Water", 494, 988, null, "6★–14★", "Lv 4"],
+["CB", "Radiant Kadachi Kaina VI", "Thunder", 498, 997, 3, "7★–14★", "Lv 4"],
+["CB", "Resplendent Montauban", "Raw", 1560, 0, null, "9★–14★", "Lv 5"],
+["CB", "Resplendent Montauban (Dragon)", "Dragon", 520, 1040, null, "9★–14★", "Lv 6"],
+["CB", "Resplendent Montauban (Fire)", "Fire", 520, 1040, null, "9★–14★", "Lv 6"],
+["CB", "Resplendent Montauban (Ice)", "Ice", 520, 1040, null, "9★–14★", "Lv 6"],
+["CB", "Resplendent Montauban (Thunder)", "Thunder", 520, 1040, null, "9★–14★", "Lv 6"],
+["CB", "Resplendent Montauban (Water)", "Water", 520, 1040, null, "9★–14★", "Lv 6"],
+["HB", "Arma Destroyer VI", "Thunder", 494, 988, null, "8★–14★", null],
+["HB", "Baan Roar VI", "Sleep", 630, 1260, null, "7★–14★", null],
+["HB", "Blacksteel Cannon VI", "Dragon", 484, 967, null, "6★–14★", null],
+["HB", "Chrome Assault VI", "Paralysis", 617, 1233, null, "1★–14★", null],
+["HB", "Datura Blaster VI", "Poison", 653, 1306, null, "1★–14★", null],
+["HB", "Dragonbone Cannon VI", "Dragon", 484, 967, null, "4★–14★", null],
+["HB", "Dual Threat VI", "Ice", 495, 989, -3, "7★–14★", null],
+["HB", "Flammenkanone VI", "Fire", 495, 989, -3, "3★–14★", null],
+["HB", "Griffon Blazooka VI", "Ice", 539, 1078, -8, "13★–14★", null],
+["HB", "Guild Crimson Crest Heavy Bowgun (Dragon) VI", "Dragon", 468, 936, null, "1★–14★", null],
+["HB", "Guild Crimson Crest Heavy Bowgun (Fire) VI", "Fire", 468, 936, null, "1★–14★", null],
+["HB", "Guild Crimson Crest Heavy Bowgun (Ice) VI", "Ice", 468, 936, null, "1★–14★", null],
+["HB", "Guild Crimson Crest Heavy Bowgun (Thunder) VI", "Thunder", 468, 936, null, "1★–14★", null],
+["HB", "Guild Crimson Crest Heavy Bowgun (Water) VI", "Water", 468, 936, null, "1★–14★", null],
+["HB", "Guild Crimson Crest Heavy Bowgun VI", "Raw", 1404, 0, null, "1★–14★", null],
+["HB", "Jagras Cannon VI", "Water", 484, 967, null, "1★–14★", null],
+["HB", "Kadachi Lion VI", "Thunder", 454, 908, 8, "5★–14★", null],
+["HB", "Power Shooter VI", "Fire", 484, 967, null, "3★–14★", null],
+["HB", "Radiant Arma Destroyer VI", "Thunder", 494, 988, null, "10★–14★", null],
+["HB", "Radiant Baan Roar VI", "Dragon", 494, 988, null, "12★–14★", null],
+["HB", "Radiant Datura Blaster VI", "Blast", 689, 1378, null, "4★–14★", null],
+["HB", "Radiant Dual Threat VI", "Water", 539, 1078, -8, "11★–14★", null],
+["HB", "Radiant Flammenkanone VI", "Fire", 495, 989, -3, "5★–14★", null],
+["HB", "Radiant Griffon Blazooka VI", "Dragon", 539, 1078, -8, "14★", null],
+["HB", "Radiant Jagras Cannon VI", "Water", 484, 967, null, "4★–14★", null],
+["HB", "Radiant Kadachi Lion VI", "Thunder", 454, 908, 8, "7★–14★", null],
+["HB", "Radiant Shattercryst+ VI", "Ice", 494, 988, null, "11★–14★", null],
+["HB", "Radiant Water Cannon VI", "Water", 494, 988, null, "6★–14★", null],
+["HB", "Scintillant Bayard", "Raw", 1560, 0, null, "9★–14★", null],
+["HB", "Scintillant Bayard (Dragon)", "Dragon", 520, 1040, null, "9★–14★", null],
+["HB", "Scintillant Bayard (Fire)", "Fire", 520, 1040, null, "9★–14★", null],
+["HB", "Scintillant Bayard (Ice)", "Ice", 520, 1040, null, "9★–14★", null],
+["HB", "Scintillant Bayard (Thunder)", "Thunder", 520, 1040, null, "9★–14★", null],
+["HB", "Scintillant Bayard (Water)", "Water", 520, 1040, null, "9★–14★", null],
+["HB", "Shattercryst+ VI", "Ice", 494, 988, null, "8★–14★", null],
+["HB", "Water Cannon VI", "Water", 484, 967, null, "2★–14★", null],
+["BW", "Alloy Bow VI", "Paralysis", 630, 1260, null, "1★–14★", null],
+["BW", "Anja Arch VI", "Fire", 495, 989, -3, "3★–14★", null],
+["BW", "Archer's Dance VI", "Sleep", 636, 1271, 3, "1★–14★", null],
+["BW", "Blacksteel Bow VI", "Dragon", 494, 988, null, "6★–14★", null],
+["BW", "Brilliant Hippogriff", "Raw", 1560, 0, null, "9★–14★", null],
+["BW", "Brilliant Hippogriff (Dragon)", "Dragon", 520, 1040, null, "9★–14★", null],
+["BW", "Brilliant Hippogriff (Fire)", "Fire", 520, 1040, null, "9★–14★", null],
+["BW", "Brilliant Hippogriff (Ice)", "Ice", 520, 1040, null, "9★–14★", null],
+["BW", "Brilliant Hippogriff (Thunder)", "Thunder", 520, 1040, null, "9★–14★", null],
+["BW", "Brilliant Hippogriff (Water)", "Water", 520, 1040, null, "9★–14★", null],
+["BW", "Cera Coilbender VI", "Ice", 539, 1078, -8, "13★–14★", null],
+["BW", "Datura String VI", "Blast", 704, 1408, null, "1★–14★", null],
+["BW", "Diablos Coilbender VI", "Ice", 495, 989, -3, "7★–14★", null],
+["BW", "Dragonbone Bow VI", "Dragon", 484, 967, null, "4★–14★", null],
+["BW", "Guild Crimson Crest Bow (Dragon) VI", "Dragon", 468, 936, null, "1★–14★", null],
+["BW", "Guild Crimson Crest Bow (Fire) VI", "Fire", 468, 936, null, "1★–14★", null],
+["BW", "Guild Crimson Crest Bow (Ice) VI", "Ice", 468, 936, null, "1★–14★", null],
+["BW", "Guild Crimson Crest Bow (Thunder) VI", "Thunder", 468, 936, null, "1★–14★", null],
+["BW", "Guild Crimson Crest Bow (Water) VI", "Water", 468, 936, null, "1★–14★", null],
+["BW", "Guild Crimson Crest Bow VI", "Raw", 1404, 0, null, "1★–14★", null],
+["BW", "Hunter's Proudbow VI", "Water", 484, 967, null, "3★–14★", null],
+["BW", "Kadachi Strikebow VI", "Thunder", 472, 944, 6, "5★–14★", null],
+["BW", "Princess Arrow VI", "Dragon", 454, 908, 8, "6★–14★", null],
+["BW", "Radiant Anja Arch VI", "Fire", 495, 989, -3, "5★–14★", null],
+["BW", "Radiant Archer's Dance VI", "Blast", 711, 1421, 3, "5★–14★", null],
+["BW", "Radiant Cera Coilbender VI", "Dragon", 539, 1078, -8, "14★", null],
+["BW", "Radiant Datura String VI", "Poison", 688, 1376, null, "4★–14★", null],
+["BW", "Radiant Diablos Coilbender VI", "Water", 539, 1078, -8, "11★–14★", null],
+["BW", "Radiant Kadachi Strikebow VI", "Thunder", 498, 997, 3, "7★–14★", null],
+["BW", "Radiant Princess Arrow VI", "Dragon", 454, 908, 8, "3★–14★", null],
+["BW", "Radiant Rathslinger VI", "Fire", 498, 997, 3, "11★–14★", null],
+["BW", "Radiant Rosen Arrow VI", "Dragon", 472, 944, 6, "12★–14★", null],
+["BW", "Radiant Snowfletcher VI", "Ice", 494, 988, null, "11★–14★", null],
+["BW", "Radiant Water Shot VI", "Water", 494, 988, null, "6★–14★", null],
+["BW", "Rathslinger VI", "Fire", 472, 944, 6, "6★–14★", null],
+["BW", "Rosen Arrow VI", "Dragon", 472, 944, 6, "9★–14★", null],
+["BW", "Snowfletcher VI", "Ice", 484, 967, null, "8★–14★", null],
+["BW", "Water Shot VI", "Water", 484, 967, null, "2★–14★", null]].map(([t,n,e,a1,a2,af,r,sh],i)=>({i,t,n,e,a1,a2,af,r,sh}));
+const WELEM_ORDER=["Fire","Water","Thunder","Ice","Dragon","Poison","Paralysis","Sleep","Blast","Raw"];
+const ELEMSK={Fire:"Fire Damage Up",Water:"Water Damage Up",Thunder:"Thunder Damage Up",Ice:"Ice Damage Up",Dragon:"Dragon Damage Up"};
+const AFF_COND=["Weakspot Exploit","Battle Spirit","Unleashed"];
+const pctOf=t=>{const m=/([+-]?\d+(?:\.\d+)?)%/.exec(t||""); return m?+m[1]:0};
+const sgn=v=>(v>0?"+":"")+v+"%";
+let WSEL={t:"GS",e:null,a:-1,b:-1};
+try{const sv=JSON.parse(localStorage.getItem("forge3w")||"null"); if(sv&&WT.some(x=>x[0]===sv.t)) WSEL={t:sv.t,e:sv.e===undefined?null:sv.e,a:sv.a,b:sv.b}}catch(e){}
+const saveW=()=>{try{localStorage.setItem("forge3w",JSON.stringify(WSEL))}catch(e){}};
+const wElems=t=>WELEM_ORDER.filter(e=>WEAP.some(w=>w.t===t&&w.e===e));
+const wBase=w=>w.e==="Raw"?w.a1:w.a2, wEl=w=>w.e==="Raw"?0:w.a1, wTotal=w=>w.e==="Raw"?w.a1:w.a1+w.a2;
+const wList=()=>WEAP.filter(w=>w.t===WSEL.t&&(!WSEL.e||w.e===WSEL.e)).sort((x,y)=>(x.e==="Raw")-(y.e==="Raw")||wTotal(y)-wTotal(x)||x.n.localeCompare(y.n));
+function wDefaultElem(){
+  const q=REQS.find(q=>!isSet(q)&&ELEM[q[0]]); const want=q?ELEM[q[0]][0].toUpperCase()+ELEM[q[0]].slice(1):"Fire";
+  return wElems(WSEL.t).includes(want)?want:wElems(WSEL.t)[0];
+}
+function fillWeap(){
+  const els=wElems(WSEL.t); if(WSEL.e===null||(WSEL.e&&!els.includes(WSEL.e))) WSEL.e=wDefaultElem();
+  $("wtype").innerHTML=WT.map(([c,n])=>`<option value="${c}"${c===WSEL.t?" selected":""}>${n}</option>`).join("");
+  $("welem").innerHTML=`<option value=""${WSEL.e===""?" selected":""}>All elements</option>`+els.map(e=>`<option value="${e}"${e===WSEL.e?" selected":""}>${e==="Raw"?"Raw (no element)":e}</option>`).join("");
+  const list=wList(); const ids=list.map(w=>w.i);
+  if(!ids.includes(WSEL.a)) WSEL.a=ids[0]??-1;
+  if(!ids.includes(WSEL.b)||WSEL.b===WSEL.a) WSEL.b=ids.find(x=>x!==WSEL.a)??WSEL.a;
+  const opt=(w,cur)=>`<option value="${w.i}"${w.i===cur?" selected":""}>${esc(w.n)} · ${w.e} · ${wTotal(w).toLocaleString()}</option>`;
+  $("wa").innerHTML=list.map(w=>opt(w,WSEL.a)).join(""); $("wb").innerHTML=list.map(w=>opt(w,WSEL.b)).join("");
+  saveW(); drawWeap();
+}
+function drawWeap(){
+  const A=WEAP[WSEL.a], B=WEAP[WSEL.b], tb=$("wtab").querySelector("tbody");
+  if(!A||!B){ tb.innerHTML=`<tr><td class="empty">No weapons for this filter.</td></tr>`; $("wsum").innerHTML=""; $("warmor").innerHTML=""; return }
+  const ev=evalBuild(BUILD,R);
+  const insLv=ev.tot["Insight"]||0, ins=insLv?pctOf(effect("Insight",insLv)):0;
+  const same=(A.e==="Raw")===(B.e==="Raw");
+  const hi=(x,y)=>same&&x!==y?[x>y?"best":"",y>x?"best":""]:["",""];
+  const tot=w=>(w.af||0)+ins;
+  const elemTxt=w=>{
+    const sk=ELEMSK[w.e];
+    if(!sk){ const used=Object.keys(ELEMSK).map(e=>ELEMSK[e]).filter(s=>ev.tot[s]); return used.length?`<span style="color:var(--warn)">${w.e==="Raw"?"Raw":w.e} weapon: your ${used.map(esc).join(", ")} does nothing here</span>`:"No element skill applies"; }
+    const lv=ev.tot[sk]||0; const wasted=Object.values(ELEMSK).filter(s=>s!==sk&&ev.tot[s]);
+    let t=lv?`<span style="color:var(--good)">✓ ${esc(sk)} Lv${lv}</span>: ${esc(effect(sk,lv))}`:`No ${esc(sk)} in your set`;
+    if(wasted.length) t+=`<br><span style="color:var(--warn)">Unused: ${wasted.map(s=>esc(s)+" Lv"+ev.tot[s]).join(", ")}</span>`;
+    return t;
+  };
+  const el=w=>(ELEMSK[w.e]?elemIcon(w.e.toLowerCase())+" ":"")+esc(w.e);
+  const shN=w=>w.sh?+(/\d+/.exec(w.sh)||[0])[0]:0;
+  const rows=[
+    ["Element",el(A),el(B),["",""]],
+    ["Attack",wBase(A).toLocaleString(),wBase(B).toLocaleString(),hi(wBase(A),wBase(B))],
+    ["Element / status attack",wEl(A)?wEl(A).toLocaleString():"—",wEl(B)?wEl(B).toLocaleString():"—",hi(wEl(A),wEl(B))],
+    ["Total (attack + element)",wTotal(A).toLocaleString(),wTotal(B).toLocaleString(),hi(wTotal(A),wTotal(B))],
+    ["Weapon affinity",A.af==null?"—":sgn(A.af),B.af==null?"—":sgn(B.af),hi(A.af||0,B.af||0)],
+    ["Your armor (Insight"+(insLv?" Lv"+insLv:"")+")",sgn(ins),sgn(ins),["",""]],
+    ["Total affinity",sgn(tot(A)),sgn(tot(B)),hi(tot(A),tot(B))],
+    ["Sharpness",A.sh||"—",B.sh||"—",A.sh&&B.sh?hi(shN(A),shN(B)):["",""]],
+    ["Rarity",esc(A.r),esc(B.r),["",""]],
+    ["Element skill from your armor",elemTxt(A),elemTxt(B),["",""]]];
+  tb.innerHTML=`<tr><th></th><th class="wname">${esc(A.n)}</th><th class="wname">${esc(B.n)}</th></tr>`+
+    rows.map(([l,a,b,c])=>`<tr><td>${l}</td><td class="${c[0]}">${a}</td><td class="${c[1]}">${b}</td></tr>`).join("");
+  const sum=[]; const d1=wBase(A)-wBase(B), d2=wEl(A)-wEl(B), d3=wTotal(A)-wTotal(B), dt=tot(A)-tot(B);
+  if(same&&d1) sum.push(`Attack: <strong>${esc(d1>0?A.n:B.n)}</strong> is higher by ${Math.abs(d1)}`);
+  if(same&&d2) sum.push(`Element attack: <strong>${esc(d2>0?A.n:B.n)}</strong> is higher by ${Math.abs(d2)}`);
+  if(same&&d3) sum.push(`Total: <strong>${esc(d3>0?A.n:B.n)}</strong> is higher by ${Math.abs(d3)}`);
+  if(dt) sum.push(`Total affinity: <strong>${esc(dt>0?A.n:B.n)}</strong> is higher by ${Math.abs(dt)}%`);
+  if(!same) sum.push(`One is Raw and one is not. Raw weapons put everything into attack (no element), so compare weapons of the same element.`);
+  $("wsum").innerHTML=sum.join("<br>")||"These two weapons have the same numbers.";
+  const off=Object.entries(ev.tot).filter(([s])=>catOf(s)==="off"&&!ELEM[s]&&s!=="Insight"&&s!=="Critical Element").sort((x,y)=>y[1]-x[1]).slice(0,12);
+  const ce=ev.tot["Critical Element"]?`<div>${catDot("Critical Element")}Critical Element Lv${ev.tot["Critical Element"]}: ${esc(effect("Critical Element",ev.tot["Critical Element"]))} (only on elemental weapons)</div>`:"";
+  $("warmor").innerHTML=(off.length||ce)?`<span class="lbl">Also from your armor (same for both weapons)</span>`+ce+off.map(([s,l])=>`<div>${catDot(s)}${esc(s)} Lv${l}: ${esc(effect(s,l))}</div>`).join(""):`<span class="note">Your loadout has no other offensive skills yet.</span>`;
+}
+$("wtype").onchange=()=>{WSEL.t=$("wtype").value; WSEL.e=null; WSEL.a=-1; WSEL.b=-1; fillWeap()};
+$("welem").onchange=()=>{WSEL.e=$("welem").value; WSEL.a=-1; WSEL.b=-1; fillWeap()};
+$("wa").onchange=()=>{WSEL.a=+$("wa").value; if(WSEL.b===WSEL.a){const o=wList().find(w=>w.i!==WSEL.a); if(o) WSEL.b=o.i} fillWeap()};
+$("wb").onchange=()=>{WSEL.b=+$("wb").value; if(WSEL.a===WSEL.b){const o=wList().find(w=>w.i!==WSEL.b); if(o) WSEL.a=o.i} fillWeap()};
+const _drawTotals=drawTotals; drawTotals=function(){_drawTotals(); drawWeap()};
+fillWeap();
+
 ["dbq","dbslot","dbcat","dbavail"].forEach(id=>$(id).addEventListener("input",drawDB));
-const _setR=setR; setR=function(r){_setR(r); drawDB()};
+const _setR=setR; setR=function(r){_setR(r); drawDB();};
 initControls(); $("rbadge").textContent="R"+R; drawSlots(); run(); drawDB();
 </script>
 
