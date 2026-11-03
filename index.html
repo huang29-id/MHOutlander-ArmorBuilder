@@ -97,8 +97,10 @@ table{border-collapse:collapse;width:100%;font-size:.86rem}
 th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
 th{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:500}
 td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
-.bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden;min-width:60px}
-.bar i{display:block;height:100%;background:var(--accent)}
+.segs{display:flex;gap:3px;min-width:84px}
+.segs i{flex:1;height:7px;border-radius:2px;background:var(--line)}
+.segs i.on{background:var(--accent)}
+.segs i.full{background:var(--good)}
 .scroll{overflow-x:auto}
 .setline{font-size:.82rem;display:flex;flex-direction:column;gap:3px}
 .on{color:var(--good);font-weight:600}
@@ -167,7 +169,7 @@ tr.cur td{background:var(--accent-soft)}
   #totals tr,#db tr,#ladder tr{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:10px 4px;border-bottom:1px solid var(--line)}
   #totals td,#db td,#ladder td{border:0;padding:0}
   #totals td:nth-child(1){flex:1 1 auto;min-width:0}
-  #totals td:nth-child(3){flex:0 0 64px}
+  #totals td:nth-child(3){flex:0 0 96px}
   #totals td:nth-child(4){flex:1 1 100%}
   #db td:nth-child(1){flex:1 1 100%;font-size:1rem}
   #db td:nth-child(2),#db td:nth-child(3),#db td:nth-child(4){font-size:.8rem;color:var(--muted)}
@@ -610,7 +612,7 @@ function drawTotals(){
   const tb=$("totals").querySelector("tbody");
   const rows=Object.entries(ev.tot).sort((a,b)=>isReq(b[0])-isReq(a[0])||b[1]-a[1]);
   tb.innerHTML=rows.length?rows.map(([s,l])=>{const mx=maxOf(s); const over=ev.raw[s]>mx; const e=ELEM[s];
-    return `<tr title="${esc(skillTip(s))}"><td>${catDot(s)}${isReq(s)?"<strong>"+esc(s)+"</strong>":esc(s)}</td><td class="num">${l}/${mx}${over?' <span title="Extra levels are wasted" style="color:var(--warn)">capped</span>':""}</td><td><div class="bar"><i style="width:${100*l/mx}%"></i></div></td><td class="note eff">${compactHTML(s,l)}</td></tr>`}).join(""):`<tr><td colspan="4" class="empty">Choose pieces, or load a set from the search.</td></tr>`;
+    return `<tr title="${esc(skillTip(s))}"><td>${catDot(s)}${isReq(s)?"<strong>"+esc(s)+"</strong>":esc(s)}</td><td class="num">${l}/${mx}${over?' <span title="Extra levels are wasted" style="color:var(--warn)">capped</span>':""}</td><td><div class="segs" role="img" aria-label="${l} of ${mx}">${Array.from({length:mx},(_,k)=>`<i class="${k<l?(l>=mx?"on full":"on"):""}"></i>`).join("")}</div></td><td class="note eff">${compactHTML(s,l)}</td></tr>`}).join(""):`<tr><td colspan="4" class="empty">Choose pieces, or load a set from the search.</td></tr>`;
 }
 function drawLadder(){
   const tb=$("ladder").querySelector("tbody");
