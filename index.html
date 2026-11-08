@@ -640,7 +640,12 @@ function scheduleMix(){
   const box=$("mixbox"); const ok=REQS.length&&RES&&RES.total; box.hidden=!ok; MIXRES=null; const job=++MIXJOB;
   $("mixon").checked=MIX.on; $("mixbody").hidden=!MIX.on;
   if(!ok){return} if(!MIX.on){$("mixinfo").textContent=""; return}
-  const reqs=(PLAN&&PLAN.skip&&PLAN.skip.length)?PLAN.keep:REQS.filter(q=>!isOpt(q));
+  // lock every searched skill at the level the found sets already reach (nice-to-have and left-out ones too),
+  // so a suggestion can only add on top of your search, never swap one of your skills away
+  const reqs=[]; REQS.forEach(q=>{ if(isSet(q)){ if(!isOpt(q)) reqs.push(q); return }
+    const hard=!isOpt(q)&&!(PLAN&&PLAN.skip&&PLAN.skip.includes(q));
+    const got=Math.max(0,...(RES.found||[]).map(f=>Math.min(f.ev.tot[q[0]]||0,q[1])));
+    const lvl=hard?q[1]:got; if(lvl>0) reqs.push([q[0],lvl]) });
   // what the sets already found give for free: no point suggesting a skill at a level you already have
   const have={}; (RES.found||[]).forEach(f=>{for(const k in f.ev.tot) if(f.ev.tot[k]>(have[k]||0)) have[k]=f.ev.tot[k]});
   const list=mixCands(); const out=[]; let i=0, hid=0; const t0=performance.now();
