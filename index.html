@@ -136,7 +136,9 @@ tr.cur td{background:var(--accent-soft)}
 .mixlist{list-style:none;margin:0;padding:0;display:grid;gap:4px}
 .mixlist li{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--line)}
 .mixlist li:last-child{border-bottom:0}
-.mixlist .mn{flex:1;min-width:0;display:inline-flex;align-items:center;gap:6px}
+.mixlist .mn{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.mixlist .mt{display:inline-flex;align-items:center;gap:6px}
+.mixlist .md{font-size:.8rem;color:var(--muted);line-height:1.35}
 .mixlist .ml{font-family:var(--mono);font-size:.82rem;white-space:nowrap}
 .mixlist .ml.full{color:var(--good)}
 .mixlist button{padding:2px 10px}
@@ -250,7 +252,7 @@ tr.cur td{background:var(--accent-soft)}
       </div>
       <div class="field" id="sortbox" hidden><label for="sort">Sort results</label>
         <select id="sort">
-          <option value="close">Closest to your levels</option>
+          <option value="close">Best match, fewest pieces</option>
           <option value="free">Most free slots first</option>
           <option value="extra">Most bonus skills first</option>
         </select></div>
@@ -444,6 +446,11 @@ function planPriority(r,reqs){
 // among sets that hit the kept priorities, prefer the one that also reaches the higher-priority skipped ones
 const lexCmp=(a,b)=>{ for(const q of PLAN.skip){ const d=val(b.ev,q)-val(a.ev,q); if(d) return d } return 0 };
 const freeOf=b=>b.ids.filter(x=>x==null).length;
+// best match first: your priorities in order (incl. left-out and nice-to-have skills), then the fewest pieces, then most bonus skills
+const prioCmp=(a,b)=>{ for(const q of REQS){ const d=val(b.ev,q)-val(a.ev,q); if(d) return d } return 0 };
+const extraSum=b=>Object.entries(b.ev.tot).filter(([s])=>!REQS.some(q=>q[0]===s)).reduce((x,[,l])=>x+l,0);
+function bestCmp(a,b){ const ex=RES&&RES.total>0;
+  return (ex?0:a.short-b.short)||prioCmp(a,b)||freeOf(b)-freeOf(a)||extraSum(b)-extraSum(a) }
 
 let R=7, REQS=[["Fire Damage Up",7],["Breaker",3]], BUILD=[null,null,null,null,null], RES=null, SHOWN=PAGE;
 let SAVEDAR=0; try{const s=JSON.parse(localStorage.getItem("forge3")||"null"); if(s){R=s.R||R; REQS=s.Q||REQS; BUILD=s.B||BUILD; SAVEDAR=+s.A||0}}catch(e){}
@@ -662,7 +669,7 @@ function drawMix(out,done){
   $("mixcats").querySelectorAll("button").forEach(b=>b.onclick=()=>{MIX.cat=b.dataset.c; saveMix(); drawMix(MIXRES||out,!!MIXRES)});
   const rows=out.filter(([k])=>!MIX.cat||catOf(k)===MIX.cat).sort((a,b)=>(b[1]/maxOf(b[0]))-(a[1]/maxOf(a[0]))||b[1]-a[1]||a[0].localeCompare(b[0]));
   const shown=MIXALL?rows:rows.slice(0,12);
-  $("mixlist").innerHTML=(rows.length?shown.map(([k,b])=>`<li><span class="mn">${catDot(k)}${esc(k)}</span><span class="ml${b>=maxOf(k)?" full":""}">${b} / ${maxOf(k)}${b>=maxOf(k)?" max":""}</span><button type="button" data-k="${esc(k)}" data-l="${b}" aria-label="Add ${esc(k)} ${b} as a requirement">+</button></li>`).join(""):`<li class="note">${done?"Nothing else fits in this category without breaking a requirement.":"Checking…"}</li>`)+(rows.length>12?`<li><button type="button" id="mixmore" style="width:100%">${MIXALL?"Show top 12":`Show all ${rows.length}`}</button></li>`:"");
+  $("mixlist").innerHTML=(rows.length?shown.map(([k,b])=>`<li><span class="mn"><span class="mt">${catDot(k)}${esc(k)}</span><span class="md">Lv ${b}: ${esc(effect(k,b))}</span></span><span class="ml${b>=maxOf(k)?" full":""}">${b} / ${maxOf(k)}${b>=maxOf(k)?" max":""}</span><button type="button" data-k="${esc(k)}" data-l="${b}" aria-label="Add ${esc(k)} ${b} as a requirement">+</button></li>`).join(""):`<li class="note">${done?"Nothing else fits in this category without breaking a requirement.":"Checking…"}</li>`)+(rows.length>12?`<li><button type="button" id="mixmore" style="width:100%">${MIXALL?"Show top 12":`Show all ${rows.length}`}</button></li>`:"");
   const mm=$("mixmore"); if(mm) mm.onclick=()=>{MIXALL=!MIXALL; drawMix(MIXRES||out,!!MIXRES)};
   $("mixlist").querySelectorAll("button[data-k]").forEach(btn=>btn.onclick=()=>{REQS.push([btn.dataset.k,+btn.dataset.l]); drawReqs(); run()});
 }
@@ -693,13 +700,13 @@ function run(){
     if(opens) $("jump").onclick=()=>{const a=arFor(opens); if(a) $("ar").value=a; setR(opens)};
     $("sortbox").hidden=false; drawResults();
   }
-  if(BUILD.every(x=>x==null)){const pick=RES.total?RES.found[0]:RES.closest; if(pick){BUILD=[...pick.ids]; drawSlots()}}
+  if(BUILD.every(x=>x==null)){const pick=[...(RES.total?RES.found:RES.near)].sort(bestCmp)[0]; if(pick){BUILD=[...pick.ids]; drawSlots()}}
   setTimeout(drawLadder,30); drawTotals(); save(); setTimeout(scheduleMix,60);
 }
 function drawResults(){
   const box=$("results"); box.innerHTML="";
   const exact=RES.total>0; const src=exact?RES.found:RES.near; const mode=$("sort").value;
-  const list=[...src].sort(mode==="free"?(a,b)=>(exact?lexCmp(a,b):a.short-b.short)||freeOf(b)-freeOf(a)||extraOf(b)-extraOf(a):mode==="extra"?(a,b)=>(exact?lexCmp(a,b):a.short-b.short)||extraOf(b)-extraOf(a)||freeOf(b)-freeOf(a):(a,b)=>exact?lexCmp(a,b)||freeOf(b)-freeOf(a):nearCmp(a,b));
+  const list=[...src].sort(mode==="free"?(a,b)=>(exact?lexCmp(a,b):a.short-b.short)||freeOf(b)-freeOf(a)||extraOf(b)-extraOf(a):mode==="extra"?(a,b)=>(exact?lexCmp(a,b):a.short-b.short)||extraOf(b)-extraOf(a)||freeOf(b)-freeOf(a):bestCmp);
   list.slice(0,SHOWN).forEach((b,i)=>{
     const d=document.createElement("div"); d.className="res";
     const others=Object.entries(b.ev.tot).filter(([s])=>!REQS.some(q=>q[0]===s)).sort((x,y)=>y[1]-x[1]).map(([s,l])=>`<span class="tag" title="${esc(skillTip(s))}">${catDot(s)}${esc(s)} ${l}</span>`).join("");
