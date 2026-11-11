@@ -72,6 +72,13 @@ button.primary{background:var(--accent);color:var(--accent-ink);border-color:var
 .res-head{display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap}
 .res-head strong{font-family:var(--display);font-size:1.1rem;letter-spacing:.02em}
 .pieces{font-size:.85rem;color:var(--muted)}
+.eqi{width:22px;height:22px;object-fit:contain;vertical-align:middle;margin-right:4px;border-radius:4px;flex:none}
+.eqi.lg{width:44px;height:44px;display:block;margin:0 0 4px}
+.slot>.lbl{grid-column:1;grid-row:1} .slot>select{grid-column:2;grid-row:1}
+.slot .slotico{grid-column:1;grid-row:2;align-self:start}
+.slot .slotico .eqi{width:48px;height:48px;margin:0}
+.slot .sk{grid-row:2}
+@media (max-width:640px){ .slot>.lbl{grid-column:1/-1;grid-row:1} .slot>select{grid-column:1/-1;grid-row:2} .slot .slotico{grid-row:3} .slot .sk{grid-row:3} .slot .slotico .eqi{width:40px;height:40px} }
 .tags{display:flex;flex-wrap:wrap;gap:5px}
 .tag{font-family:var(--mono);font-size:.72rem;padding:2px 7px;border-radius:4px;background:var(--accent-soft);color:var(--ink);white-space:nowrap}
 .tag.hi{background:var(--accent);color:var(--accent-ink)}
@@ -182,6 +189,15 @@ tr.cur td{background:var(--accent-soft)}
 .vsum td,.vsum th{padding:5px 4px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
 .vsum td.n{text-align:right;font-family:var(--mono);white-space:nowrap}
 .vsum th{font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.vmv{font-family:var(--mono);font-weight:700;align-self:center;white-space:nowrap}
+.vmv small{font-weight:400;color:var(--muted)}
+.wawk{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin:10px 0}
+.wawk>div{border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.wawk h4{margin:0 0 6px;font-size:.92rem}
+.wawk .ar{display:grid;grid-template-columns:1fr 84px;gap:6px;margin-top:6px}
+.wawk .ar input{width:100%}
+.wawk .ed{font-size:.76rem;color:var(--muted);margin:6px 0 0}
+.wtab .src{color:var(--muted);font-size:.75rem;font-weight:400}
 .vsum .src{color:var(--muted);font-size:.8rem}
 .verdict{border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:6px}
 .verdict.ok{background:color-mix(in srgb,var(--good) 14%,transparent);border:1px solid var(--good)}
@@ -225,9 +241,9 @@ tr.cur td{background:var(--accent-soft)}
   .req .pick{grid-column:1/-1}
   .req select,.req button,.req .pcs{min-height:40px}
   .pick{min-height:42px}
-  .slot{grid-template-columns:minmax(0,1fr);gap:4px}
+  .slot{grid-template-columns:44px minmax(0,1fr);gap:4px 8px}
   .slot .lbl{padding-top:0}
-  .slot .sk{grid-column:1}
+  .slot .sk{grid-column:2}
   .slot select{min-height:42px}
   .scroll{overflow-x:visible}
   #totals thead,#db thead,#ladder thead{display:none}
@@ -313,7 +329,7 @@ tr.cur td{background:var(--accent-soft)}
 
   <section class="panel" aria-labelledby="w-h">
     <h2 id="w-h">Weapon compare</h2>
-    <p class="note" style="margin:0">Pick a weapon type and element, then two weapons. The comparison uses the armor set in your loadout builder.</p>
+    <p class="note" style="margin:0">Pick a weapon type and element, then two weapons. The comparison uses the armor set in your loadout builder, plus the visages and adventurer from the Visages section if you've picked any.</p>
     <div class="wctl">
       <div class="field"><label for="wtype">Weapon type</label><select id="wtype"></select></div>
       <div class="field"><label for="welem">Element</label><select id="welem"></select></div>
@@ -321,6 +337,7 @@ tr.cur td{background:var(--accent-soft)}
       <div class="field"><label for="wa">Weapon 1</label><select id="wa"></select></div>
       <div class="field"><label for="wb">Weapon 2</label><select id="wb"></select></div>
     </div>
+    <div id="wawk"></div>
     <div class="scroll"><table class="wtab" id="wtab"><tbody></tbody></table></div>
     <div id="wsum" class="wsum"></div>
     <div id="warmor" class="wlist"></div>
@@ -342,7 +359,7 @@ tr.cur td{background:var(--accent-soft)}
     <div id="vsets" class="vsets"></div>
     <h3 class="vh3">Stat preview</h3>
     <div id="vsum"></div>
-    <p class="note">Visage data from game8 and GameWith (Nov 2026); visage icons and adventurer portraits © Capcom, used for this non-commercial fan tool. Flat numbers and percentages are added up as listed; the game's final damage formula isn't public, so this isn't your in-game sheet number. Adventurer awakening stats, awakening token and engrave values are from gacha.gg.</p>
+    <p class="note">Visage data from game8 and GameWith (Nov 2026); visage icons, adventurer portraits and equipment icons (loaded from gacha.gg) © Capcom, used for this non-commercial fan tool. Flat numbers and percentages are added up as listed; the game's final damage formula isn't public, so this isn't your in-game sheet number. Adventurer awakening stats, awakening token and engrave values are from gacha.gg.</p>
   </section>
 
   <section class="panel" aria-labelledby="db-h">
@@ -417,6 +434,12 @@ function nearCmp(a,b){ if(a.short!==b.short) return a.short-b.short; for(let k=0
 
 const PIECES=[]; const SETS={};
 DATA.sets.forEach(s=>{SETS[s.s]=s; s.pc.forEach(p=>PIECES.push({id:PIECES.length,name:p[0],slot:p[1],min:p[2],sk:p[3],set:s.s}))});
+// Equipment icons, loaded from gacha.gg (matched by name, Nov 2026). Armor: one entry per set in DATA order, one code per piece.
+const GGIMG=p=>"https://www.gacha.gg/_next/image?url="+encodeURIComponent("/img/monster-hunter-outlanders/dm/"+p)+"&w=64&q=75";
+const ARMICO="AdventureTeam:afb44b63,169266cf,6e5813b7,8e7a8c30,01be0967|KuluYaKu:6085d3e3,8987c201,21af7fba,33875de8,b412fe91|GreatJagras:69ed4c95,73a67c09,b872f674,180e4e27,ffd26fb0|Jyuratodus:687e54c5,74a5e6ec,6a2962c3,0fc3de03,bf0af023|GreatGirros:aa7b1bd1,018d863a,f8102ebb,7b25d8bf,3a31f94f|Chainmail:5020bc60,018477a0,10f1a862,6cb85ac7,97b476ba|Leather:6928d8b3,f2d460dd,815a0e8f,2afb387e,28ee1b01|PukeiPukei:b5de5154,e27b4b73,936d6706,6fa32a58,4eec3d60|RGBarroth:427a4fbc,e98bfe3a,c0111a65,fb2b3005,ea02371f|RGKuluYaKu:7587ab26,866291eb,cca68269,c9ee9e24,db1cf6e7|RGAnjanath:d6842085,fa1ec745,218c6a23,98d12c6b,29e8c3af|TobiKadachi:89d5c336,b34e3e28,8e0441e8,95531d4f,bdd5e4c2|Butterfly:7e591353,e4cc6815,aeaf0945,830cd05c,6a3d0b0e|Beetle:58183da7,179e88f2,23d18365,b05ee734,bfb3e11b|HighMetal:2e85ef33,1b29381a,7ad60858,7dbca1b5,1290cea4|Hornetaur:0996ba26,00dcada1,bbef8719,68f5117f,ceddef09|RGPukeiPukei:838af070,1e916fbe,831df999,8dfce6bb,6b50f4fa|RGGreatJagras:0151887e,1bcd4880,df4b505e,821bd30d,2ad12350|Alloy:e54072f7,e79dda63,4ea667cc,7616f550,efdf7417|RGRathian:c50d673e,878d95b8,a1637296,cff49eeb,c7389d1e|Anjanath:dd8bb4b0,b0e6d58b,b7adbb96,377ab81f,33bf26e7|Vespoid:9730f4e5,d5ca03c8,9bc1980d,f112ac55,71542c5c|Hunter:db29e749,d184bf84,eb055c5f,49f8c9f5,9ec86a00|Bone:23635d12,8c95f1c5,7303c5c2,828eca56,4c8a4f8a|Barroth:85c23b99,3d26f236,c091fa6a,c71403ed,ca495d77|Ingot:e0a6f18c,af640213,35124689,b53fa53a,77ed7f52|RGJyuratodus:c9f5f619,1007e8be,848553a0,d0af7d6b,e99855e3|Rathian:9b689f0e,355959f4,9a1cb775,e5f73550,5527d643|Rathalos:2e556532,ab52b313,f95769c1,2a11a601,39ad1a61|Diablos:9c7a089a,7949f179,c36b7b3a,32adde8d,8e92123b|RGGreatGirros:a8d08e2a,60c5dae6,3e263652,c5c79559,453b7148|RGTobiKadachi:d786b39d,7128f157,48b76ddb,446e7e8e,b6249d63|Radobaan:ea766b2e,760f6c3c,b7dd680a,e2bef3f5,e13da08e|TzitziYaKu:e1f7ee7e,0fe75c65,c70fa9f0,bd5fccb3,cde409c6|PinkRathian:Head_M_2-bbe44d2c,Chest_M_2-7e428e39,Arms_M_2-9e86f856,Waist_M_2-9214a3ad,Leg_M_2-a12915b9|Legiana:a75805d6,b868aa5c,7db00342,ba23e7a3,29e249b9|Odogaron:d4151430,99322525,0c457dbe,ff4f7593,0be069a0|Paolumu:530915c2,b946b373,7fc9d6e6,5a32b98c,5760b2ac|RGPaolumu:acf0e2e6,e94c0460,e6264bba,ade3047f,4cca1ebf|RugerAidal:Head_M_OU_01-d4a4aa88,Waist_M_OU_01-b4305855,Arms_M_OU_01-d5983809,Waist_M_OU_01-b4305855,Leg_M_OU_01-fc82d420|RGOdogaron:3a898d23,6a3aafa6,91f05f12,b141ca4d,3da329bf|RGTzitziYaKu:6666cd11,8e5c3ebd,c781dafe,b5501f5c,7e3be842|RGDiablos:e96a5234,8c07c3fb,f1139f20,aa4fa513,4c41278f|RGLegiana:495f6ee6,67acb4d8,bfb1f4c6,393057be,7eaaed12|RGRathalos:6b0c01a2,f27daf80,4db86c2e,931c4e1d,58e77908|RGRadobaan:274f565b,3b5a8e05,f3959554,5cc69b30,50fd6524|RGPinkRathian:Head_M_2-5ac5a7dd,Chest_M_2-0ab256e5,Arms_M_2-ccf96596,Waist_M_2-75ecfc1f,Leg_M_2-aac309e0|BlackDiablos:Head_M_2-4c0fae60,Chest_M_2-6a78b7a7,Arms_M_2-2286bacd,Waist_M_2-41aed9a0,Leg_M_2-19c32735|RGBlackDiablos:Head_M_2-543e4fd7,Chest_M_2-46b46630,Arms_M_2-254c66ad,Waist_M_2-5d745276,Leg_M_2-366de2e2";
+const ICOSLOT={head:"Head",chest:"Chest",arms:"Arms",waist:"Waist",legs:"Leg"};
+(()=>{ let id=0; ARMICO.split("|").forEach((e,si)=>{ const [code,list]=e.split(":"); list.split(",").forEach((x,pi)=>{ const P=PIECES[id++]; if(!P) return; const c=x.includes("/")?x.split("/")[0]:code, r=x.includes("/")?x.split("/")[1]:x; P.icon=GGIMG(`ArmourIcon/ArmourIcon_${c}_${r.includes("-")?r:ICOSLOT[P.slot]+"_M_1-"+r}.webp`) }) }) })();
+const eqIcon=(url,cls="")=>url?`<img class="eqi${cls?" "+cls:""}" src="${url}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()">`:"";
 const SETSKILLS=DATA.sets.filter(s=>s.k.n).map(s=>({set:s.s,name:s.k.n,p:s.k.p,e:s.k.e,g:s.k.g})).sort((a,b)=>a.name.localeCompare(b.name));
 const ALLSKILLS=[...new Set(PIECES.flatMap(p=>p.sk.map(k=>k[0])).concat(DATA.sets.flatMap(s=>s.k.g.map(g=>g[0]))))].sort();
 const maxOf=s=>(DATA.skills[s]||[3])[0]||3;
@@ -673,7 +696,7 @@ document.addEventListener("pointerdown",e=>{ if(PICK && !PICK.pop.contains(e.tar
 function setR(r){R=r; $("rar").value=r; $("rbadge").textContent="R"+r; drawSlots(); run(); save()}
 
 function reqSummary(ev){return REQS.map((q,i)=>{const v=val(ev,q), t=tgt(q); return `<span class="tag ${v>=t?"hi":"miss"}" title="${esc(isSet(q)?setTip(q[0]):skillTip(q[0]))}">P${i+1} ${isSet(q)?"":catDot(q[0])}${esc(qLabel(q))} ${v}/${t}${isSet(q)?" pcs":""}</span>`}).join("")}
-function piecesLine(ids){return ids.map((id,i)=>id==null?`<span class="free">${SLOTNAME[SLOTS[i]]}: free</span>`:esc(PIECES[id].name)).join(" · ")}
+function piecesLine(ids){return ids.map((id,i)=>id==null?`<span class="free">${SLOTNAME[SLOTS[i]]}: free</span>`:`<span style="white-space:nowrap">${eqIcon(PIECES[id].icon)}${esc(PIECES[id].name)}</span>`).join(" · ")}
 
 
 // ---- Potential mix: highest level of each other skill reachable while all requirements still hold ----
@@ -793,7 +816,8 @@ function drawSlots(){
     sel.onchange=()=>{BUILD[i]=sel.value===""?null:+sel.value; drawSlots(); save()};
     const lab=document.createElement("label"); lab.className="lbl"; lab.htmlFor=sel.id; lab.textContent=SLOTNAME[slot];
     const sk=document.createElement("div"); sk.className="sk"; sk.innerHTML=BUILD[i]!=null?progHTML(PIECES[BUILD[i]],R):"";
-    row.append(lab,sel,sk); box.appendChild(row)});
+    const ic=document.createElement("div"); ic.className="slotico"; ic.innerHTML=BUILD[i]!=null?eqIcon(PIECES[BUILD[i]].icon):"";
+    row.append(lab,sel,ic,sk); box.appendChild(row)});
   drawTotals();
 }
 function drawTotals(){
@@ -829,7 +853,7 @@ function drawDB(){
   const q=$("dbq").value.trim().toLowerCase(), sl=$("dbslot").value, cap=$("dbavail").value==="cap", ct=$("dbcat").value, wp=$("dbweap").value;
   const rows=PIECES.filter(p=>(!sl||p.slot===sl)&&(!cap||p.min<=effR(p,R))&&(!ct||p.sk.some(k=>catOf(k[0])===ct))&&(!wp||p.sk.some(k=>wMatch(k[0],wp)))&&(!q||p.name.toLowerCase().includes(q)||p.set.toLowerCase().includes(q)||p.sk.some(k=>k[0].toLowerCase().includes(q))))
     .sort((a,b)=>a.set.localeCompare(b.set)||SLOTORD[a.slot]-SLOTORD[b.slot]);
-  $("db").querySelector("tbody").innerHTML=rows.length?rows.map(p=>`<tr><td><strong>${esc(p.name)}</strong></td><td>${esc(p.set)}</td><td>${SLOTNAME[p.slot]}</td><td class="num">R${p.min}</td><td>${progHTML(p,R)}</td></tr>`).join(""):`<tr><td colspan="5" class="empty">No pieces match. Try another search.</td></tr>`;
+  $("db").querySelector("tbody").innerHTML=rows.length?rows.map(p=>`<tr><td>${eqIcon(p.icon)}<strong>${esc(p.name)}</strong></td><td>${esc(p.set)}</td><td>${SLOTNAME[p.slot]}</td><td class="num">R${p.min}</td><td>${progHTML(p,R)}</td></tr>`).join(""):`<tr><td colspan="5" class="empty">No pieces match. Try another search.</td></tr>`;
   $("dbcount").textContent=`${rows.length} of ${PIECES.length} pieces`;
 }
 
@@ -1129,6 +1153,9 @@ const WEAP=[["GS", "Barroth Shredder VI", "Paralysis", 631, 1262, -3, "2★–14
 const WELEM_ORDER=["Fire","Water","Thunder","Ice","Dragon","Poison","Paralysis","Sleep","Blast","Raw"];
 // Ruger Aidal Apex weapons: one weapon per type, element chosen when crafting (the data has a variant per element)
 const APEX=["Luminous Durandal","Dawnlit Joyeuse","Lucent Hauteclaire","Sonorous Olifant","Gleaming Curtana","Resplendent Montauban","Scintillant Bayard","Brilliant Hippogriff"];
+const WICOU="Barroth_2-179f7e72|KushalaDaora_2_heigang-51fdc41e|HighMetal_1-5ad2fc9c|PukeiPukei_2-d078784b|Dragonbone_1-3f17a5a9|Anjanath_1-7523fc2c|IceElement_2-c14851ab|Bone_2-0740434f|AdventureTeam_1-5c9a3107|GreatJagras_2-09ba4aea|ThunderElement_2-add6a5db|RugerAidal_SP_Physical-d510607b|RugerAidal_SP_Loong-a3d03d94|RugerAidal_SP_Fire-0bac3ac7|RugerAidal_SP_Ice-779b41a3|RugerAidal_SP_Thunder-9d7af936|RugerAidal_SP_Water-2372c037|GreatGirros_2-afd9f133|RGBarroth_2-7b2916a4|RGPukeiPukei_2-0d19e233|RGAnjanath_1-8554e7dc|RGIceElement_2-05b6f4f0|RGGreatJagras_2-0dd3f50b|RGThunderElement_2-fe8079ee|RGGreatGirros_2-82dbc2c0|RGRadobaan_1-b930b087|RGRathalos_2-6e239422|RGWaterElement_2-c50f6b0f|Radobaan_1-5f15e662|Rathalos_2-6d253f21|WaterElement_2-d006dfb1|Anjanath_2-1afa7287|KushalaDaora_2_heigang-d1246277|Bone_2-13b2fbdc|Hornetaur_2-3e88c831|RugerAidal_SP_Physical-a9c84377|RugerAidal_SP_Loong-50b76761|RugerAidal_SP_Fire-5c937360|RugerAidal_SP_Ice-fdbbae10|RugerAidal_SP_Thunder-5f66629d|RugerAidal_SP_Water-56f2fcab|TzitziYaKu_2-92e13f5a|Jyuratodus_2-72b6a4b2|DragonBone_1-64cdb0e2|AdventureTeam_1-3a6ae62d|HighMetal_1-8c601608|TobiKadachi_2-b6942ad0|KuluYaKu_2-74f0fadc|RGAnjanath_2-06c5c6fb|RGTzitziYaKu_2-e1d8b6a7|RGJyuratodus_2-9c995f52|RGTobiKadachi_2-882ea235|RGKuluYaKu_2-f60b43b5|RGLegiana_2-91b0e8b2|RGRathalos_1-d03d324f|RGRathian_1-faf8a929|Legiana_2-6ee69be0|Rathalos_1-5f672a8b|Rathian_1-2a32044e|Anjanath_2-6467540a|KuluYaKu_2-e97e29df|KushalaDaora_2_heigang-590f10ce|Odogaron_2-21b9a0dc|HighMetal_1-16019f6b|Hornetaur_2-f2ed5baf|Diablos_2-13851843|Diablos_1-2f24ff99|DragonBone_1-ac664bec|TzitziYaKu_2-6a7b9869|IceElement_2-8dcaad21|AdventureTeam_1-11205d85|Jyuratodus_2-c95e79b5|TobiKadachi_2-f155fc3c|RugerAidal_SP_Physical-52b8f6d8|RugerAidal_SP_Loong-f9308f21|RugerAidal_SP_Fire-3d956bbd|RugerAidal_SP_Ice-14870b6b|RugerAidal_SP_Thunder-0109b10f|RugerAidal_SP_Water-4d0839b9|RGAnjanath_2-eb6321c1|RGKuluYaKu_2-631461c6|RGOdogaron_2-035cec0a|RGDiablos_2-d8e1f06e|RGTzitziYaKu_2-faa605c9|RGIceElement_2-2b45e89b|RGJyuratodus_2-ecf4c43e|RGTobiKadachi_2-ffb00659|Bone_1-781fa6c1|Rathalos_3-01114004|Anjanath_2-b24c3a65|Radobaan_2-06c422c9|Barroth_2-0631d256|KushalaDaora_2_heigang-5baa9308|PukeiPukei_1-356d0650|KuluYaKu_2-cd86af5e|Diablos_2-9aab612b|Diablos_1-3c0b9f24|Dragonbone_1-b0f46537|Bone_1-2383c75e|AdventureTeam_1-aa9258df|KushalaDaora_1_guitie-6506d8fb|ThunderElement_2-4e99bcf6|GreatGirros_2-d3067de5|RGAnjanath_2-0f03fe33|RGRadobaan_2-5ac013fa|RGBarroth_2-ac1a0548|RGKuluYaKu_2-7089a0d4|RGDiablos_2-a2943b9a|RGThunderElement_2-935e13ea|RGGreatGirros_1-7b26881c|RGWaterElement_2-2ae9a01d|RugerAidal_SP_Physical-f7c6abd8|RugerAidal_SP_Loong-87ac9c34|RugerAidal_SP_Fire-6f04d4e5|RugerAidal_SP_Ice-7ee8f6bb|RugerAidal_SP_Thunder-f319135a|RugerAidal_SP_Water-ddde5d6b|WaterElement_2-97996518|Barroth_2-910ae03f|KushalaDaora_2_heigang-abc86f4e|HighMetal_2-5a833e23|Hornetaur_2-858eb969|PukeiPukei_2-d74d5dc0|Dragonbone_1-9ed724ab|Odogaron_2-19155100|RugerAidal_SP_Physical-7103796b|RugerAidal_SP_Loong-b0cdf4cc|RugerAidal_SP_Fire-6503bc55|RugerAidal_SP_Ice-3788a960|RugerAidal_SP_Thunder-bb5594f6|RugerAidal_SP_Water-8c6901b5|AdventureTeam_1-b6b81901|Bone_1-88dfd619|KuluYaKu_2-d81e7d8f|Legiana_1-4c1269d7|ThunderElement_1-fd4f23e4|RGBarroth_2-9ce32cbe|RGPukeiPukei_2-acbb73ec|RGOdogaron_2-62ac3391|RGKuluYaKu_2-e9688fe7|RGLegiana_1-30c6d3eb|RGThunderElement_2-80a44c47|RGRathalos_2-5cdb48ff|RGWaterElement_2-b48a3cf5|Rathalos_1-818f773d|WaterElement_2-e3946c30|Rathalos_2-9dabd31d|KushalaDaora_2_Heigang-e985bbdf|HighMetal_1-e5d203d6|PinkRathian_2-88ffce4b|Rathian_1-3496b5f0|Diablos_2-8ae05bc7|Diablos_1-d46ef38b|Dragonbone_1-63e45a90|IceElement_2-a55488f0|GreatGirros_2-3658dc7b|AdventureTeam_1-e736dd64|Bone_1-d341c027|Odogaron_2-d1482f94|GreatJagras_1-4efb9c62|Jyuratodus_2-0dd9e772|TobiKadachi_2-f05f7abc|RGRathalos_2-72f0997b|RGPinkRathian_2-6e009fbe|RGRathian_1-80fa61ff|RGDiablos_2-fcb6ebe9|RGDiablos_1-7ddf9e43|RGIceElement_2-e7326e35|RGGreatGirros_2-9e6d16e0|RGOdogaron_2-18990aaa|RGGreatJagras_1-c030a233|RGJyuratodus_2-cfec9dd7|RGTobiKadachi_2-61256895|RugerAidal_SP_Physical-3768f030|RugerAidal_SP_Loong-0a50df01|RugerAidal_SP_Fire-7995d43d|RugerAidal_SP_Ice-14fec6d4|RugerAidal_SP_Thunder-67648bd8|RugerAidal_SP_Water-eb2617dd|TzitziYaKu_2-8fde3c2e|Radobaan_2-628e8622|KushalaDaora_2_heigang-f39f9ba0|HighMetal_2-f1e42251|PukeiPukei_2-0e227284|DragonBone_1-054816e3|Diablos_2-c531f23c|Anjanath_2-9da7a5de|BlackDiablos_2-904c7d18|AdventureTeam_1-74637109|GreatJagras_2_zhongnuqiang-19736a8b|TobiKadachi_2-bd76b1a8|Bone_2-9db1f9a2|RGTzitziYaKu_2-61112f96|RGRadobaan_2-cd08cb53|RGPukeiPukei_2-5b76ad46|RGDiablos_2-8883fe36|RGAnjanath_2-1c83f2e4|RGBlackDiablos_2-0a2b3604|RGGreatJagras_2_yalongzhongnuqiang-62aba94c|RGTobiKadachi_1-3482349c|RGLegiana_1-443e4add|RGWaterElement_2-86454896|RugerAidal_SP_Physical-f011353e|RugerAidal_SP_Loong-50b2e481|RugerAidal_SP_Fire-33dd53c8|RugerAidal_SP_Ice-2233b9c7|RugerAidal_SP_Thunder-25836bb0|RugerAidal_SP_Water-7e3f0824|Legiana_1-982a882f|WaterElement_2-7eb4f621|HighMetal_1-98d3ec6d|Anjanath_2-3c878afc|KuluYaKu_2-8081b164|KushalaDaora_2_heigang-12331f5a|RugerAidal_SP_Physical-f9df061b|RugerAidal_SP_Loong-f5e00f04|RugerAidal_SP_Fire-47ecfde4|RugerAidal_SP_Ice-cee86f93|RugerAidal_SP_Thunder-d11f1b8c|RugerAidal_SP_Water-44905fa6|BlackDiablos_2-4bf87a2f|Pukeipukei_2-e6d9a1fa|Diablos_2-4ad009c2|Dragonbone_1-6887847d|AdventureTeam_1-319b3434|Bone_1-eff861f1|TobiKadachi_2-f595bfed|Rathian_1-b7b26ef1|RGAnjanath_2-cd4efc65|RGKuluYaKu_2-868d6891|RGBlackDiablos_2-77759caf|RGPukeipukei_2-a85b9c4c|RGDiablos_2-5c11f228|RGTobiKadachi_2-a143dec2|RGRathian_1-12bf4d6c|RGRathalos_1-cba605f3|RGPinkRathian_3-8adc3cbe|RGLegiana_2-8f420ef5|RGWaterElement_2-1dade4fd|Rathalos_1-74a89532|PinkRathian_3-516fb948|Legiana_2-45701ec2|WaterElement_2-fafc510f".split("|"), WICOI=[0,1,2,3,4,5,6,7,8,8,8,8,8,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,44,44,44,44,44,45,46,47,48,49,50,51,52,53,54,55,55,56,57,58,58,59,60,61,62,63,64,65,66,67,68,69,70,70,70,70,70,70,71,72,73,74,75,76,77,78,79,80,81,82,82,83,84,85,86,70,87,88,89,90,91,92,93,94,95,96,97,98,99,99,99,99,99,99,99,100,101,102,103,104,105,99,106,107,107,99,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,131,131,131,131,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,156,156,156,156,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,188,188,188,188,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,224,224,224,224,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242];
+const WDIR={GS:"GreatSword",LS:"LongSword",DB:"DualBlades",HM:"Hammer",LN:"Lance",CB:"ChargeBlade",HB:"HeavyBowgun",BW:"Bow"};
+WEAP.forEach((w,i)=>{ const c=WICOU[WICOI[i]]; if(c) w.icon=GGIMG(`${WDIR[w.t]}/WeaponIcon_${WDIR[w.t]}_${c}.webp`) });
 WEAP.forEach(w=>{w.base=w.n.replace(/ \((Fire|Water|Thunder|Ice|Dragon)\)$/,""); w.apex=APEX.includes(w.base)});
 const APEXEL=["Fire","Water","Thunder","Ice","Dragon","Raw"];
 const wName=w=>w.apex?`${w.base} (Apex · ${w.e})`:w.n;
@@ -1137,7 +1164,11 @@ const AFF_COND=["Weakspot Exploit","Battle Spirit","Unleashed"];
 const pctOf=t=>{const m=/([+-]?\d+(?:\.\d+)?)%/.exec(t||""); return m?+m[1]:0};
 const sgn=v=>(v>0?"+":"")+v+"%";
 let WSEL={t:"GS",e:null,a:-1,b:-1,ae:"Fire"};
-try{const sv=JSON.parse(localStorage.getItem("forge3w")||"null"); if(sv&&WT.some(x=>x[0]===sv.t)) WSEL={t:sv.t,e:sv.e===undefined?null:sv.e,a:sv.a,b:sv.b,ae:APEXEL.includes(sv.ae)?sv.ae:"Fire"}}catch(e){}
+try{const sv=JSON.parse(localStorage.getItem("forge3w")||"null"); if(sv&&WT.some(x=>x[0]===sv.t)) WSEL={t:sv.t,e:sv.e===undefined?null:sv.e,a:sv.a,b:sv.b,ae:APEXEL.includes(sv.ae)?sv.ae:"Fire",aw:sv.aw&&typeof sv.aw==="object"?sv.aw:{}}}catch(e){}
+// Apex (Ruger Aidal) awakening: one slot opens per upgrade (rarity 10–14), each slot rolls a random effect. No public table of roll values, so the player types what they rolled.
+const AWKT=[["atk","Attack",""],["el","Element attack",""],["aff","Affinity","%"],["eld","Element damage","%"],["phys%","Physical damage","%"],["ecrit","Elemental crit damage","%"],["dmg","Damage","%"],["ult","Ultimate charge rate","%"]];
+function awkOf(side){ const w=WEAP[side==="a"?WSEL.a:WSEL.b]; if(!w||!w.apex) return null; WSEL.aw=WSEL.aw||{}; const o=WSEL.aw[side]=WSEL.aw[side]||{n:5,s:[]}; return o }
+function awkSum(side,t){ const o=side&&awkOf(side); if(!o) return 0; return o.s.slice(0,o.n).reduce((a,x)=>a+(x&&x.t===t?+x.v||0:0),0) }
 const saveW=()=>{try{localStorage.setItem("forge3w",JSON.stringify(WSEL))}catch(e){}};
 const wElems=t=>WELEM_ORDER.filter(e=>WEAP.some(w=>w.t===t&&w.e===e));
 const wBase=w=>w.e==="Raw"?w.a1:w.a2, wEl=w=>w.e==="Raw"?0:w.a1, wTotal=w=>w.e==="Raw"?w.a1:w.a1+w.a2;
@@ -1163,14 +1194,39 @@ function fillWeap(){
   $("wa").innerHTML=list.map(w=>opt(w,WSEL.a)).join(""); $("wb").innerHTML=list.map(w=>opt(w,WSEL.b)).join("");
   saveW(); drawWeap();
 }
+let AWKHOLD=false;
+function drawAwk(){
+  if(AWKHOLD) return;
+  const box=$("wawk"), sides=[["a","Weapon 1"],["b","Weapon 2"]].filter(([sd])=>awkOf(sd));
+  if(!sides.length){ box.innerHTML=""; box.className=""; return }
+  box.className="wawk";
+  box.innerHTML=sides.map(([sd,lab])=>{ const w=WEAP[sd==="a"?WSEL.a:WSEL.b], o=awkOf(sd);
+    return `<div><h4>${eqIcon(w.icon)}${lab}: ${esc(wName(w))} awakening</h4><div class="field"><label for="awn-${sd}">Current upgrade</label><select id="awn-${sd}" data-awn="${sd}">${[0,1,2,3,4,5].map(n=>`<option value="${n}"${n===+o.n?" selected":""}>Rarity ${9+n} · ${n} awakening slot${n===1?"":"s"}</option>`).join("")}</select></div>`
+      +Array.from({length:+o.n},(_,i)=>{ const x=o.s[i]||{}; const u=(AWKT.find(t=>t[0]===x.t)||[])[2]||"";
+        return `<div class="ar"><select aria-label="Slot ${i+1} effect" data-awt="${sd}" data-i="${i}"><option value="">Slot ${i+1}: none / other</option>${AWKT.map(([k,n])=>`<option value="${k}"${k===x.t?" selected":""}${(k==="el"||k==="eld")&&!ELEMSK[w.e]?" disabled":""}>Slot ${i+1}: ${n}</option>`).join("")}</select><input type="number" step="0.1" min="0" inputmode="decimal" aria-label="Slot ${i+1} value${u?" (%)":""}" placeholder="${u?"%":"value"}" data-awv="${sd}" data-i="${i}" value="${x.v??""}"${x.t?"":" disabled"}></div>` }).join("")
+      +`<p class="ed">Type the value you rolled in game. Attack and element numbers in the table are the max-rarity weapon stats plus your awakening.</p></div>` }).join("");
+  box.querySelectorAll("[data-awn]").forEach(e=>e.onchange=()=>{ awkOf(e.dataset.awn).n=+e.value; saveW(); drawWeap() });
+  const redraw=()=>{ AWKHOLD=true; try{ drawWeap() } finally { AWKHOLD=false } };
+  box.querySelectorAll("[data-awt]").forEach(e=>e.onchange=()=>{ const o=awkOf(e.dataset.awt), i=+e.dataset.i; o.s[i]={t:e.value,v:(o.s[i]||{}).v??""}; const inp=box.querySelector(`[data-awv="${e.dataset.awt}"][data-i="${i}"]`); inp.disabled=!e.value; inp.placeholder=(AWKT.find(t=>t[0]===e.value)||[])[2]?"%":"value"; saveW(); redraw() });
+  box.querySelectorAll("[data-awv]").forEach(e=>e.oninput=()=>{ const o=awkOf(e.dataset.awv); (o.s[+e.dataset.i]=o.s[+e.dataset.i]||{t:""}).v=e.value===""?"":Math.max(0,+e.value); saveW(); redraw() });
+}
 function drawWeap(){
   const A=WEAP[WSEL.a], B=WEAP[WSEL.b], tb=$("wtab").querySelector("tbody");
-  if(!A||!B){ tb.innerHTML=`<tr><td class="empty">No weapons for this filter.</td></tr>`; $("wsum").innerHTML=""; $("warmor").innerHTML=""; return }
+  if(!A||!B){ tb.innerHTML=`<tr><td class="empty">No weapons for this filter.</td></tr>`; $("wsum").innerHTML=""; $("warmor").innerHTML=""; $("wawk").innerHTML=""; return }
+  drawAwk();
   const ev=evalBuild(BUILD,R);
   const insLv=ev.tot["Insight"]||0, ins=insLv?pctOf(effect("Insight",insLv)):0;
   const same=(A.e==="Raw")===(B.e==="Raw");
   const hi=(x,y)=>same&&x!==y?[x>y?"best":"",y>x?"best":""]:["",""];
-  const tot=w=>(w.af||0)+ins;
+  const CA=calcTotals(A,"a").T, CB=calcTotals(B,"b").T, sm=(T,k)=>(T[k]||[]).reduce((a,[v])=>a+v,0);
+  const extra=VISREADY&&(!!VST.adv||VST.slots.some(sl=>visOf(sl.v))), src=extra?"armor + visages + adventurer":"armor";
+  const tot=w=>sm(w===A?CA:CB,"aff");
+  const xA=t=>t==="el"&&!ELEMSK[A.e]?0:awkSum("a",t), xB=t=>t==="el"&&!ELEMSK[B.e]?0:awkSum("b",t);
+  const atkA=wBase(A)+xA("atk"), atkB=wBase(B)+xB("atk"), elA=wEl(A)+xA("el"), elB=wEl(B)+xB("el");
+  const av=(base,x)=>x?`${(base+x).toLocaleString()} <span class="src">(${base.toLocaleString()} + ${x} awakening)</span>`:base.toLocaleString();
+  const eatk=(w,T)=>ELEMSK[w.e]?sm(T,w.e):0, edmg=(w,T)=>ELEMSK[w.e]?sm(T,w.e+"%")+sm(T,"eleall"):0;
+  const pc=v=>v?sgn(Math.round(v*100)/100):"—";
+  const build=[["Element attack",eatk(A,CA),eatk(B,CB),v=>v?v.toLocaleString():"—"],["Element damage bonus",edmg(A,CA),edmg(B,CB),pc],["Physical damage bonus",sm(CA,"phys%"),sm(CB,"phys%"),pc],["Damage bonus",sm(CA,"dmg"),sm(CB,"dmg"),pc],["Elemental crit damage",ELEMSK[A.e]?sm(CA,"ecrit"):0,ELEMSK[B.e]?sm(CB,"ecrit"):0,pc],["Ultimate charge rate",sm(CA,"ult"),sm(CB,"ult"),pc]].filter(r=>r[1]||r[2]).map(([l,a,b,f])=>[l,f(a),f(b),hi(a,b)]);
   const elemTxt=w=>{
     const sk=ELEMSK[w.e];
     if(!sk){ const used=Object.keys(ELEMSK).map(e=>ELEMSK[e]).filter(s=>ev.tot[s]); return used.length?`<span style="color:var(--warn)">${w.e==="Raw"?"Raw":w.e} weapon: your ${used.map(esc).join(", ")} does nothing here</span>`:"No element skill applies"; }
@@ -1183,25 +1239,29 @@ function drawWeap(){
   const shN=w=>w.sh?+(/\d+/.exec(w.sh)||[0])[0]:0;
   const rows=[
     ["Element",el(A),el(B),["",""]],
-    ["Attack",wBase(A).toLocaleString(),wBase(B).toLocaleString(),hi(wBase(A),wBase(B))],
-    ["Element / status attack",wEl(A)?wEl(A).toLocaleString():"—",wEl(B)?wEl(B).toLocaleString():"—",hi(wEl(A),wEl(B))],
-    ["Total (attack + element)",wTotal(A).toLocaleString(),wTotal(B).toLocaleString(),hi(wTotal(A),wTotal(B))],
+    ["Attack",av(wBase(A),xA("atk")),av(wBase(B),xB("atk")),hi(atkA,atkB)],
+    ["Element / status attack",wEl(A)?av(wEl(A),xA("el")):"—",wEl(B)?av(wEl(B),xB("el")):"—",hi(elA,elB)],
+    ["Total (attack + element)",av(wTotal(A),xA("atk")+xA("el")),av(wTotal(B),xB("atk")+xB("el")),hi(atkA+elA,atkB+elB)],
     ["Weapon affinity",A.af==null?"—":sgn(A.af),B.af==null?"—":sgn(B.af),hi(A.af||0,B.af||0)],
     ["Your armor (Insight"+(insLv?" Lv"+insLv:"")+")",sgn(ins),sgn(ins),["",""]],
-    ["Total affinity",sgn(tot(A)),sgn(tot(B)),hi(tot(A),tot(B))],
+    ...(xA("aff")||xB("aff")?[["Apex awakening affinity",xA("aff")?sgn(xA("aff")):"—",xB("aff")?sgn(xB("aff")):"—",["",""]]]:[]),
+    ...(extra?[["Visages + adventurer affinity",sgn(Math.round((tot(A)-(A.af||0)-ins-xA("aff"))*100)/100),sgn(Math.round((tot(B)-(B.af||0)-ins-xB("aff"))*100)/100),["",""]]]:[]),
+    ["Total affinity",sgn(Math.round(tot(A)*100)/100),sgn(Math.round(tot(B)*100)/100),hi(tot(A),tot(B))],
+    ...build,
     ["Sharpness",A.sh||"—",B.sh||"—",A.sh&&B.sh?hi(shN(A),shN(B)):["",""]],
     ["Rarity",esc(A.r),esc(B.r),["",""]],
-    ...(A.apex||B.apex?[["Apex (Ruger Aidal)",A.apex?"Element picked when crafting; awakening effects not included":"—",B.apex?"Element picked when crafting; awakening effects not included":"—",["",""]]]:[]),
+    ...(A.apex||B.apex?[["Apex (Ruger Aidal)",A.apex?`Element picked when crafting · ${awkOf("a").n} awakening slot(s) set above`:"—",B.apex?`Element picked when crafting · ${awkOf("b").n} awakening slot(s) set above`:"—",["",""]]]:[]),
     ["Element skill from your armor",elemTxt(A),elemTxt(B),["",""]]];
-  tb.innerHTML=`<tr><th></th><th class="wname">${esc(wName(A))}</th><th class="wname">${esc(wName(B))}</th></tr>`+
+  tb.innerHTML=`<tr><th></th><th class="wname">${eqIcon(A.icon,"lg")}${esc(wName(A))}</th><th class="wname">${eqIcon(B.icon,"lg")}${esc(wName(B))}</th></tr>`+
     rows.map(([l,a,b,c])=>`<tr><td>${l}</td><td class="${c[0]}">${a}</td><td class="${c[1]}">${b}</td></tr>`).join("");
-  const sum=[]; const d1=wBase(A)-wBase(B), d2=wEl(A)-wEl(B), d3=wTotal(A)-wTotal(B), dt=tot(A)-tot(B);
+  const sum=[]; const d1=atkA-atkB, d2=elA-elB, d3=atkA+elA-atkB-elB, dt=tot(A)-tot(B);
   if(same&&d1) sum.push(`Attack: <strong>${esc(wName(d1>0?A:B))}</strong> is higher by ${Math.abs(d1)}`);
   if(same&&d2) sum.push(`Element attack: <strong>${esc(wName(d2>0?A:B))}</strong> is higher by ${Math.abs(d2)}`);
   if(same&&d3) sum.push(`Total: <strong>${esc(wName(d3>0?A:B))}</strong> is higher by ${Math.abs(d3)}`);
-  if(dt) sum.push(`Total affinity: <strong>${esc(wName(dt>0?A:B))}</strong> is higher by ${Math.abs(dt)}%`);
+  if(dt) sum.push(`Total affinity: <strong>${esc(wName(dt>0?A:B))}</strong> is higher by ${Math.round(Math.abs(dt)*100)/100}%`);
+  const dd=sm(CA,"dmg")-sm(CB,"dmg"); if(dd) sum.push(`Damage bonus: <strong>${esc(wName(dd>0?A:B))}</strong> is higher by ${Math.round(Math.abs(dd)*100)/100}% (adventurer core passive)`);
   if(!same) sum.push(`One is Raw and one is not. Raw weapons put everything into attack (no element), so compare weapons of the same element.`);
-  $("wsum").innerHTML=sum.join("<br>")||"These two weapons have the same numbers.";
+  $("wsum").innerHTML=(sum.join("<br>")||"These two weapons have the same numbers.")+`<br><span class="note">Affinity and bonus rows include your ${src}.</span>`;
   const off=Object.entries(ev.tot).filter(([s])=>catOf(s)==="off"&&!ELEM[s]&&s!=="Insight"&&s!=="Critical Element").sort((x,y)=>y[1]-x[1]).slice(0,12);
   const ce=ev.tot["Critical Element"]?`<div>${catDot("Critical Element")}Critical Element Lv${ev.tot["Critical Element"]}: ${esc(effect("Critical Element",ev.tot["Critical Element"]))} (only on elemental weapons)</div>`:"";
   $("warmor").innerHTML=(off.length||ce)?`<span class="lbl">Also from your armor (same for both weapons)</span>`+ce+off.map(([s,l])=>`<div>${catDot(s)}${esc(s)} Lv${l}: ${esc(effect(s,l))}</div>`).join(""):`<span class="note">Your loadout has no other offensive skills yet.</span>`;
@@ -1227,8 +1287,18 @@ const VIS=[["Anjanath",3,["Combat"],"After an adventurer uses a buff squadmate s
 // visage icons: one 400x200 sprite, 10 per row, 40px each (order below; card icons zoom-cropped)
 const VICON="Rathian,Pink Rathian,Rathalos,Radiant Rathalos,Diablos,Radiant Diablos,Barroth,Radiant Barroth,Anjanath,Radiant Anjanath,Radiant Great Jagras,Pukei-Pukei,Radiant Pukei-Pukei,Kulu-Ya-Ku,Radiant Kulu-Ya-Ku,Jyuratodus,Radiant Jyuratodus,Tobi-Kadachi,Paolumu,Radiant Paolumu,Legiana,Great Girros,Odogaron,Radobaan,Tzitzi-Ya-Ku,Radiant Rathian,Aptonoth,Apceros,Kelbi,Hornetaur,Vespoid,Gajau,Jagras,Mernos,Kestodon,Raphinos,Shamos,Barnos,Girros,Gastodon,Noios,Warrior Atecoli,Pitcher Atecoli,Great Jagras,Radiant Legiana,Radiant Tobi-Kadachi,Radiant Radobaan,Radiant Tzitzi-Ya-Ku,Radiant Odogaron,Radiant Great Girros".split(",");
 const vIcon=n=>{const k=VICON.indexOf(n); return k<0?`<span class="vico vnone" aria-hidden="true">${esc(n.split(/[ -]/).filter(w=>w!=="Radiant").map(w=>w[0]).join("").slice(0,2))}</span>`:`<span class="vico" role="img" aria-label="${esc(n)}" style="--x:${k%10};--y:${Math.floor(k/10)}"></span>`};
-const VMAIN={4:[["aff","Affinity %",1.75],["ult","Ultimate charge %",1.81]],3:[["ult","Ultimate charge %",1.67],["eleall","Elemental damage %",2.44]],1:[["aff","Affinity %",0.92],["ult","Ultimate charge %",0.90],["eleall","Elemental damage %",1.55]]};
-const VSUB=[["dmg","Damage %",[0.84,1.35,1.69]],["ecrit","Elemental crit damage %",[1.27,2.03,2.53]],["def","Defense",[3,5,6]],["patk","Physical attack",[15,24,30]],["Fire","Fire attack",[15,24,30]],["Water","Water attack",[15,24,30]],["Thunder","Thunder attack",[15,24,30]],["Ice","Ice attack",[15,24,30]],["Dragon","Dragon attack",[15,24,30]]];
+// [key, label, max, min] — roll ranges from game8 "List of All Visages" (Nov 2026)
+const VMAIN={4:[["aff","Affinity %",1.75,0.88],["ult","Ultimate charge %",1.81,0.90]],3:[["ult","Ultimate charge %",1.67,0.84],["eleall","Elemental damage %",2.44,1.22]],1:[["aff","Affinity %",0.92,0.46],["ult","Ultimate charge %",0.90,0.45],["eleall","Elemental damage %",1.55,0.78]]};
+// Main stats are counted at visage Lv10: 4 roll stages between the low and high value. Ruger Aidal's visage has one fixed, higher value per stat (game8).
+const VMAINX={"Ruger Aidal":[["ult","Ultimate charge %",2.92],["eleall","Elemental damage %",4.27]]};
+const vMains=V=>VMAINX[V.n]||VMAIN[V.c];
+// [key, label, max per quality Rare/Epic/Superior, min per quality]
+const VSUB=[["dmg","Damage %",[0.84,1.35,1.69],[0.51,1.01,1.43]],["ecrit","Elemental crit damage %",[1.27,2.03,2.53],[0.76,1.52,2.15]],["def","Defense",[3,5,6],[2,4,6]],["patk","Physical attack",[15,24,30],[10,18,26]],["Fire","Fire attack",[15,24,30],[10,18,26]],["Water","Water attack",[15,24,30],[10,18,26]],["Thunder","Thunder attack",[15,24,30],[10,18,26]],["Ice","Ice attack",[15,24,30],[10,18,26]],["Dragon","Dragon attack",[15,24,30],[10,18,26]]];
+// 4 evenly spaced roll stages from low to high (flat stats round to whole numbers)
+const ROLLN=4;
+function rollSteps(mn,mx){ const pct=!Number.isInteger(mn)||!Number.isInteger(mx); if(mn===mx) return [mx]; return [...new Set(Array.from({length:ROLLN},(_,k)=>{const v=mn+(mx-mn)*k/(ROLLN-1); return pct?Math.round(v*100)/100:Math.round(v)}))] }
+function rollSel(attrs,mn,mx,cur){ const st=rollSteps(mn,mx); let bi=st.length-1,bd=1e9; st.forEach((v,k)=>{const d=Math.abs(v-(+cur)); if(d<bd){bd=d;bi=k}});
+  return `<select ${attrs}>${st.map((v,k)=>`<option value="${v}"${k===bi?" selected":""}>${st.length>1?`${k+1}/${st.length} · `:""}${v}${!Number.isInteger(mn)||!Number.isInteger(mx)?"%":""}${k===0&&st.length>1?" (low)":k===st.length-1&&st.length>1?" (max)":""}</option>`).join("")}</select>` }
 const QUAL=["Rare","Epic","Superior"];
 const newVSlot=()=>({v:"",ink:"",m:"",mv:0,m2:"",mv2:0,q:2,subs:[]});
 let VOPEN=-1;
@@ -1245,14 +1315,16 @@ function drawVis(){
   $("vslots").innerHTML=VST.slots.map((sl,i)=>{ const V=visOf(sl.v);
     if(!V) return `<div class="vslot"><div class="vrow"><span class="vlbl">${i?"Slot "+(i+1):"Core"}</span></div>${pick(i,null)}</div>`;
     if(!V.inks.includes(sl.ink)) sl.ink=V.inks[0];
-    const mains=VMAIN[V.c]; if(!mains.some(m=>m[0]===sl.m)){sl.m=mains[0][0]; sl.mv=mains[0][2]}
-    const subs=[0,1,2,3,4].map(j=>{const sb=sl.subs[j]||{t:"",v:0}; return `<div class="vrow"><select data-i="${i}" data-f="st" data-j="${j}" aria-label="Substat ${j+1}"><option value="">— substat ${j+1} —</option>${VSUB.map(([k,n])=>`<option value="${k}"${k===sb.t?" selected":""}>${n}</option>`).join("")}</select>${sb.t?`<input type="number" step="0.01" min="0" value="${sb.v}" data-i="${i}" data-f="sv" data-j="${j}" aria-label="Substat ${j+1} value">`:""}</div>`}).join("");
+    const mains=vMains(V); if(!mains.some(m=>m[0]===sl.m)){ sl.m=mains[0][0]; sl.mv=mains[0][2] }
+    const mvSel=(f,key,cur,lab)=>{ const m=mains.find(x=>x[0]===key)||mains[0]; return m[3]==null?`<span class="vmv" title="Fixed main stat at visage Lv10">+${m[2]}% <small>Lv10</small></span>`:rollSel(`data-i="${i}" data-f="${f}" aria-label="${lab} at Lv10"`,m[3],m[2],cur) };
+    if(VMAINX[V.n]){ sl.mv=(mains.find(m=>m[0]===sl.m)||mains[0])[2] }
+    const subs=[0,1,2,3,4].map(j=>{const sb=sl.subs[j]||{t:"",v:0}; return `<div class="vrow"><select data-i="${i}" data-f="st" data-j="${j}" aria-label="Substat ${j+1}"><option value="">— substat ${j+1} —</option>${VSUB.map(([k,n])=>`<option value="${k}"${k===sb.t?" selected":""}>${n}</option>`).join("")}</select>${sb.t?(()=>{const d=VSUB.find(x=>x[0]===sb.t); return rollSel(`data-i="${i}" data-f="sv" data-j="${j}" aria-label="Substat ${j+1} roll"`,d[3][+sl.q||0],d[2][+sl.q||0],sb.v)})():""}</div>`}).join("");
     return `<div class="vslot"><div class="vrow"><span class="vlbl">${i?"Slot "+(i+1):"Core"} · cost ${V.c}</span></div>${pick(i,V)}
       <div class="vrow"><select data-i="${i}" data-f="ink" aria-label="Ink">${V.inks.map(k=>`<option${k===sl.ink?" selected":""}>${k}</option>`).join("")}</select>
       <select data-i="${i}" data-f="m" aria-label="Main stat">${mains.map(([k,n])=>`<option value="${k}"${k===sl.m?" selected":""}>${n}</option>`).join("")}</select>
-      <input type="number" step="0.01" min="0" value="${sl.mv}" data-i="${i}" data-f="mv" aria-label="Main stat value">
+      ${mvSel("mv",sl.m,sl.mv,"Main stat")}
       <select data-i="${i}" data-f="q" aria-label="Quality">${QUAL.map((q,k)=>`<option value="${k}"${k===+sl.q?" selected":""}>${q}</option>`).join("")}</select></div>
-      ${+sl.q>=1?(()=>{ const m2=mains; if(!m2.some(m=>m[0]===sl.m2)){sl.m2=sl.m; sl.mv2=(mains.find(m=>m[0]===sl.m)||mains[0])[2]} return `<div class="vrow"><span class="vlbl">2nd main</span><select data-i="${i}" data-f="m2" aria-label="Second main stat">${m2.map(([k,n])=>`<option value="${k}"${k===sl.m2?" selected":""}>${n}</option>`).join("")}</select><input type="number" step="0.01" min="0" value="${sl.mv2}" data-i="${i}" data-f="mv2" aria-label="Second main stat value"></div>`})():""}
+      ${+sl.q>=1?(()=>{ const m2=mains; if(!m2.some(m=>m[0]===sl.m2)){ sl.m2=sl.m; sl.mv2=(m2.find(m=>m[0]===sl.m2)||m2[0])[2] } if(VMAINX[V.n]) sl.mv2=(m2.find(m=>m[0]===sl.m2)||m2[0])[2]; return `<div class="vrow"><span class="vlbl">2nd main</span><select data-i="${i}" data-f="m2" aria-label="Second main stat">${m2.map(([k,n])=>`<option value="${k}"${k===sl.m2?" selected":""}>${n}</option>`).join("")}</select>${mvSel("mv2",sl.m2,sl.mv2,"Second main stat")}</div>`})():""}
       ${i===0?`<div class="vcore">Core effect: ${V.core?esc(V.core):"none"}</div>`:""}
       <details${sl.subs.some(x=>x&&x.t)?" open":""}><summary>Substats (${sl.subs.filter(x=>x&&x.t).length}/5)</summary>${subs}</details></div>`}).join("");
   $("vslots").querySelectorAll("[data-act=open]").forEach(b=>b.onclick=()=>{const i=+b.dataset.i; VOPEN=VOPEN===i?-1:i; drawVis()});
@@ -1261,9 +1333,9 @@ function drawVis(){
     const sl=VST.slots[+el.dataset.i], f=el.dataset.f, j=+el.dataset.j;
     if(f==="v"){ Object.assign(sl,newVSlot(),{v:el.value}); }
     else if(f==="ink") sl.ink=el.value;
-    else if(f==="m"){ sl.m=el.value; const V=visOf(sl.v); sl.mv=(VMAIN[V.c].find(m=>m[0]===sl.m)||[0,0,0])[2]; }
+    else if(f==="m"){ sl.m=el.value; const V=visOf(sl.v); sl.mv=(vMains(V).find(m=>m[0]===sl.m)||[0,0,0])[2]; }
     else if(f==="mv"){ sl.mv=+el.value||0; saveV(); drawVisSum(); return }
-    else if(f==="m2"){ sl.m2=el.value; const V=visOf(sl.v); sl.mv2=(VMAIN[V.c].find(m=>m[0]===sl.m2)||[0,0,0])[2]; }
+    else if(f==="m2"){ sl.m2=el.value; const V=visOf(sl.v); sl.mv2=(vMains(V).find(m=>m[0]===sl.m2)||[0,0,0])[2]; }
     else if(f==="mv2"){ sl.mv2=+el.value||0; saveV(); drawVisSum(); return }
     else if(f==="q"){ sl.q=+el.value; sl.subs.forEach(sb=>{if(sb&&sb.t){const d=VSUB.find(x=>x[0]===sb.t); sb.v=d[2][sl.q]}}) }
     else if(f==="st"){ const d=VSUB.find(x=>x[0]===el.value); sl.subs[j]=el.value?{t:el.value,v:d[2][sl.q]}:{t:"",v:0}; }
@@ -1271,21 +1343,21 @@ function drawVis(){
     saveV(); drawVis(); }));
   drawVisSum();
 }
-function drawVisSum(){
-  // set bonuses
-  const cnt={}; VST.slots.forEach((sl,i)=>{ if(visOf(sl.v)&&sl.ink) cnt[sl.ink]=(cnt[sl.ink]||0)+(i===0&&VST.hm?2:1) });
-  $("vsets").innerHTML=Object.keys(cnt).length?Object.entries(cnt).sort((a,b)=>b[1]-a[1]).map(([k,c])=>{const e=INKS[k]||["",""]; return `<div><strong>${esc(k)}</strong> ${c} piece${c>1?"s":""} · <span class="${c>=2?"on":""}">2: ${esc(e[0])}</span> · <span class="${c>=4?"on":""}">4: ${esc(e[1])}</span></div>`}).join(""):`<div class="note">No visages picked yet.</div>`;
-  // totals
+var VISREADY=false;
+function calcTotals(W,side){
+  const VS=VISREADY?VST:{slots:[],adv:"",hm:false};
+  const cnt={}; VS.slots.forEach((sl,i)=>{ if(visOf(sl.v)&&sl.ink) cnt[sl.ink]=(cnt[sl.ink]||0)+(i===0&&VS.hm?2:1) });
   const T={}; const add=(k,v,src)=>{ if(!v) return; (T[k]=T[k]||[]).push([v,src]) };
-  const W=WEAP[WSEL.a]; const ev=evalBuild(BUILD,R);
-  const A=ADV.find(a=>a[0]===VST.adv);
-  if(A){ const lv=Math.max(1,Math.min(80,VST.al||80)), al=Math.min(75,lv); const [atk,def,el]=AWK[A[4]][al-1]; const src=`${A[0]} (awakening Lv${al})`; add("aatk",atk,src); add("def",def,src); add(A[1]+"E",el,src);
+  const ev=evalBuild(BUILD,R);
+  const A=VS.adv?ADV.find(a=>a[0]===VS.adv):null;
+  if(A){ const lv=Math.max(1,Math.min(80,VS.al||80)), al=Math.min(75,lv); const [atk,def,el]=AWK[A[4]][al-1]; const src=`${A[0]} (awakening Lv${al})`; add("aatk",atk,src); add("def",def,src); add(A[1]+"E",el,src);
     const t=ADVCA[A[0]], k=engLv("ca"); if(t&&k){ const csrc=`${A[0]} engrave: core attribute ${["","I","II","III","IV","V"][k]}${k>1&&k<5?" (est.)":""}`; add(t==="el"?A[1]+"%":t,caVal(t,k),csrc) } }
-  if(W){ add("patk",wBase(W),"Weapon 1 ("+wName(W)+")"); if(ELEMSK[W.e]) add(W.e,wEl(W),"Weapon 1"); if(W.af) add("aff",W.af,"Weapon 1") }
+  if(W){ add("patk",wBase(W),"Weapon 1 ("+wName(W)+")"); if(ELEMSK[W.e]) add(W.e,wEl(W),"Weapon 1"); if(W.af) add("aff",W.af,"Weapon 1");
+    const o=side&&awkOf(side); if(o) o.s.slice(0,o.n).forEach((x,i)=>{ if(!x||!x.t||!+x.v) return; const k=x.t==="atk"?"patk":x.t==="el"?(ELEMSK[W.e]?W.e:null):x.t==="eld"?(ELEMSK[W.e]?W.e+"%":null):x.t; if(k) add(k,+x.v,`Apex awakening slot ${i+1}`) }) }
   const ins=ev.tot["Insight"]||0; if(ins) add("aff",pctOf(effect("Insight",ins)),"Armor: Insight Lv"+ins);
   Object.entries(ELEMSK).forEach(([e,sk])=>{const lv=ev.tot[sk]||0; if(!lv) return; const t=effect(sk,lv); const fl=/attack \+(\d+)/i.exec(t); if(fl) add(e,+fl[1],`Armor: ${sk} Lv${lv}`); const pc=/dmg \+(\d+(?:\.\d+)?)%/i.exec(t); if(pc) add(e+"%",+pc[1],`Armor: ${sk} Lv${lv} (vs Radiant more)`)});
   const ce=ev.tot["Critical Element"]||0; if(ce) add("ecrit",pctOf(effect("Critical Element",ce)),"Armor: Critical Element Lv"+ce);
-  VST.slots.forEach((sl,i)=>{ const V=visOf(sl.v); if(!V) return; const nm=`Visage: ${V.n}`; add(sl.m,+sl.mv,nm+" (main)"); if(+sl.q>=1&&sl.m2) add(sl.m2,+sl.mv2,nm+" (2nd main)"); sl.subs.forEach(sb=>{ if(sb&&sb.t) add(sb.t,+sb.v,nm) }) });
+  VS.slots.forEach((sl,i)=>{ const V=visOf(sl.v); if(!V) return; const nm=`Visage: ${V.n}`; add(sl.m,+sl.mv,nm+" (main)"); if(+sl.q>=1&&sl.m2) add(sl.m2,+sl.mv2,nm+" (2nd main)"); sl.subs.forEach(sb=>{ if(sb&&sb.t) add(sb.t,+sb.v,nm) }) });
   Object.entries(cnt).forEach(([k,c])=>{ if(c>=2&&INK2[k]){const [t,v]=INK2[k]; add(t==="phys"?"phys%":["Fire","Water","Thunder","Ice","Dragon"].includes(t)?t+"%":t,v,k+" (2-piece)")} });
   const cpn=A?engLv("cp"):0;
   if(A&&cpn>=1){ const cp=ADVCP[A[0]], spec=W&&W.e===A[1], sum=k=>(T[k]||[]).reduce((a,[v])=>a+v,0), nm=`${A[0]} core passive ${ROMAN[cpn]}`;
@@ -1294,6 +1366,14 @@ function drawVisSum(){
       if(cpn>=4&&cp[3]==="eatk"){ const ea=sum(A[1]), v=Math.floor(Math.max(0,ea-1500)/100)*2.5; add("dmg",v,`${nm} (+2.5% per 100 ${A[1]} attack over 1500)`) }
       if(cpn>=4&&cp[3]==="ecrit"){ const ec=sum("ecrit"), v=Math.round(Math.max(0,ec-20)*0.5*100)/100; add("dmg",v,`${nm} (+0.5% per 1% elemental crit damage over 20%)`) } }
   }
+  return {T,A};
+}
+function drawVisSum(){
+  // set bonuses
+  const cnt={}; VST.slots.forEach((sl,i)=>{ if(visOf(sl.v)&&sl.ink) cnt[sl.ink]=(cnt[sl.ink]||0)+(i===0&&VST.hm?2:1) });
+  $("vsets").innerHTML=Object.keys(cnt).length?Object.entries(cnt).sort((a,b)=>b[1]-a[1]).map(([k,c])=>{const e=INKS[k]||["",""]; return `<div><strong>${esc(k)}</strong> ${c} piece${c>1?"s":""} · <span class="${c>=2?"on":""}">2: ${esc(e[0])}</span> · <span class="${c>=4?"on":""}">4: ${esc(e[1])}</span></div>`}).join(""):`<div class="note">No visages picked yet.</div>`;
+  // totals
+  const W=WEAP[WSEL.a]; const {T,A}=calcTotals(W,"a");
   const ROWS=[["aatk","Adventurer attack",""],["patk","Physical attack",""],["phys%","Physical damage","%"],...["Fire","Water","Thunder","Ice","Dragon"].flatMap(e=>[[e,e+" attack",""],[e+"E",e+" damage (adventurer)",""],[e+"%",e+" damage","%"]]),["eleall","Elemental damage (all)","%"],["ecrit","Elemental crit damage","%"],["dmg","Damage","%"],["aff","Affinity","%"],["ult","Ultimate charge rate","%"],["def","Defense",""]];
   const fmt=(v,u)=>(Math.round(v*100)/100)+u;
   const rows=ROWS.filter(([k])=>T[k]).map(([k,n,u])=>{const tot=T[k].reduce((a,[v])=>a+v,0); return `<tr><td>${n}<div class="src">${T[k].map(([v,s])=>esc(s)+" "+(v>0&&u?"+":"")+fmt(v,u)).join(" · ")}</div></td><td class="n">${(tot>0&&u?"+":"")+fmt(tot,u)}</td></tr>`});
@@ -1364,6 +1444,8 @@ fillAdv();
 $("vhm").addEventListener("change",()=>{VST.hm=$("vhm").checked; saveV(); drawVisSum()});
 $("vreset").addEventListener("click",()=>{VST={hm:VST.hm,adv:VST.adv,al:VST.al,tok:VST.tok,cn:VST.cn,eng:VST.eng,slots:[0,1,2,3,4].map(newVSlot)}; saveV(); drawVis()});
 const _drawWeapV=drawWeap; drawWeap=function(){_drawWeapV(); if($("vsum")){ fillEng(); drawVisSum() }};
+const _drawVisSumW=drawVisSum; drawVisSum=function(){_drawVisSumW(); _drawWeapV()};
+VISREADY=true;
 drawVis();
 ["dbq","dbslot","dbcat","dbweap","dbavail"].forEach(id=>$(id).addEventListener("input",drawDB));
 const _setR=setR; setR=function(r){_setR(r); drawDB();};
