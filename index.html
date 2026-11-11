@@ -142,6 +142,47 @@ tr.cur td{background:var(--accent-soft)}
 .mixlist .ml{font-family:var(--mono);font-size:.82rem;white-space:nowrap}
 .mixlist .ml.full{color:var(--good)}
 .mixlist button{padding:2px 10px}
+.vico{--s:32px;width:var(--s);height:var(--s);flex:none;border-radius:6px;background:url(icons/visages.webp) no-repeat;background-size:calc(var(--s)*10) calc(var(--s)*5);background-position:calc(var(--x,0)*var(--s)*-1) calc(var(--y,0)*var(--s)*-1);display:inline-flex;align-items:center;justify-content:center}
+.vico.vnone{background:var(--line);font-family:var(--mono);font-size:.72rem;font-weight:700}
+.vpick{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:6px 10px;font-weight:600}
+.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:6px;max-height:340px;overflow:auto;padding:4px;border:1px solid var(--line);border-radius:8px}
+.vgh{grid-column:1/-1;font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding-top:4px}
+.vcell{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;font-size:.7rem;line-height:1.15;text-align:center}
+.vcell .vico{--s:40px}
+.vcell.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.vcell.over{opacity:.45}
+.aico{--s:32px;width:var(--s);height:var(--s);flex:none;border-radius:50%;background:url(icons/adventurers.webp) no-repeat;background-size:calc(var(--s)*7) calc(var(--s)*2);background-position:calc(var(--x,0)*var(--s)*-1) calc(var(--y,0)*var(--s)*-1);display:inline-flex;align-items:center;justify-content:center}
+.aico.vnone{background:var(--line);font-family:var(--mono);font-size:.72rem;font-weight:700}
+.vcell .aico{--s:48px}
+.vcell .asub{font-size:.62rem;color:var(--muted)}
+#vadvgrid .vgrid{margin:8px 0;max-height:none;grid-template-columns:repeat(auto-fill,minmax(88px,1fr))}
+.field .flabel{display:block;font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.veng{margin-top:10px;border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.veng h4{margin:0 0 8px;font-size:.95rem}
+.veng .eg{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px 14px}
+.veng .ed{font-size:.78rem;color:var(--muted);margin:4px 0 0;line-height:1.35}
+.veng .ew{font-size:.8rem;color:var(--warn,#c0622f);margin:8px 0 0}
+.vadv{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.vtop{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.vcost{font-family:var(--mono);font-weight:600}
+.vcost.over{color:var(--warn)}
+.vslots{display:grid;gap:8px}
+.vslot{border:1px solid var(--line);border-radius:8px;padding:8px 10px;display:grid;gap:6px}
+.vslot .vrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.vslot select,.vslot input{min-width:0}
+.vslot .vname{flex:1 1 180px}
+.vslot input[type=number]{width:76px}
+.vslot .vlbl{font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.vslot details summary{cursor:pointer;font-size:.85rem;color:var(--muted)}
+.vslot .vcore{font-size:.82rem;color:var(--muted)}
+.vsets{display:grid;gap:4px;font-size:.88rem}
+.vsets .on{color:var(--good)}
+.vh3{margin:6px 0 0;font-size:1rem}
+.vsum{width:100%;border-collapse:collapse;font-size:.88rem}
+.vsum td,.vsum th{padding:5px 4px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.vsum td.n{text-align:right;font-family:var(--mono);white-space:nowrap}
+.vsum th{font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.vsum .src{color:var(--muted);font-size:.8rem}
 .verdict{border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:6px}
 .verdict.ok{background:color-mix(in srgb,var(--good) 14%,transparent);border:1px solid var(--good)}
 .verdict.no{background:color-mix(in srgb,var(--warn) 12%,transparent);border:1px solid var(--warn)}
@@ -284,6 +325,24 @@ tr.cur td{background:var(--accent-soft)}
     <div id="wsum" class="wsum"></div>
     <div id="warmor" class="wlist"></div>
     <p class="note" style="margin:0">Weapon data: fan-made list, snapshot Nov 1 2026. It has no slots, skills or element values, and the source only gives two unlabelled attack numbers. Attack = the larger number, element attack = the smaller one, total = both added (this matches every element weapon that has a Raw twin, e.g. 520 + 1,040 = 1,560; it is inferred, not stated by the source). Compare weapons of the same type only. Stats are for the fully upgraded form (max rarity); the source has no stats for lower rarities.</p>
+  </section>
+
+  <section class="panel" aria-labelledby="v-h">
+    <h2 id="v-h">Visages &amp; stat preview</h2>
+    <p class="note">Pick up to 5 visages (12 cost max). The first slot is the core. Choose each one's ink, main stat and rolled substats, and the summary below adds them to your Weapon 1 and armor skills.</p>
+    <div class="vtop"><span id="vcost" class="vcost"></span><label class="mixtog"><input type="checkbox" id="vhm"> <span>Hunting Master 1 (core counts as 2 pieces)</span></label><button type="button" id="vreset">Reset</button></div>
+    <div class="vadv">
+      <div class="field"><span class="flabel" id="vadv-l">Adventurer</span><div id="vadv" aria-labelledby="vadv-l"></div></div>
+      <div class="field"><label for="val">Adventurer level (1–80)</label><input type="number" id="val" min="1" max="80" step="1"></div>
+      <div class="field"><label for="vtok">Awakening token</label><select id="vtok"></select></div>
+    </div>
+    <div id="vadvgrid"></div>
+    <div id="veng"></div>
+    <div id="vslots" class="vslots"></div>
+    <div id="vsets" class="vsets"></div>
+    <h3 class="vh3">Stat preview</h3>
+    <div id="vsum"></div>
+    <p class="note">Visage data from game8 and GameWith (Nov 2026); visage icons and adventurer portraits © Capcom, used for this non-commercial fan tool. Flat numbers and percentages are added up as listed; the game's final damage formula isn't public, so this isn't your in-game sheet number. Adventurer awakening stats, awakening token and engrave values are from gacha.gg.</p>
   </section>
 
   <section class="panel" aria-labelledby="db-h">
@@ -1155,6 +1214,157 @@ $("wb").onchange=()=>{WSEL.b=+$("wb").value; if(WSEL.a===WSEL.b){const o=wList()
 const _drawTotals=drawTotals; drawTotals=function(){_drawTotals(); drawWeap()};
 fillWeap();
 
+
+// ---- Adventurer (gacha.gg, Nov 2026): awakening growth is one curve per rarity; awakening token ("engrave") 0-5 ----
+const ADV=[["Arkaya","Dragon","Support","Lance","SSR"],["Freya","Fire","Disruptor","Great Sword","SSR"],["Haze","Thunder","Support","Dual Blades","SSR"],["Keres","Dragon","Disruptor","Dual Blades","SSR"],["Luka","Thunder","Assault","Bow","SSR"],["Midori","Fire","Assault","Long Sword","SSR"],["Pepper","Water","Disruptor","Heavy Bowgun","SSR"],["Pyro","Dragon","Assault","Great Sword","SSR"],["Rhodes","Ice","Assault","Hammer","SSR"],["Luxheart","Thunder","Disruptor","Great Sword","SR"],["Madelyn","Water","Support","Bow","SR"],["Ouyang Varen","Water","Assault","Lance","SR"],["Raya","Fire","Disruptor","Dual Blades","SR"],["Ryunosuke","Fire","Support","Long Sword","SR"]];
+const AWK={SSR:"4/10/3,9/23/7,16/41/12,25/63/18,36/89/25,49/120/33,64/156/43,81/197/54,100/243/66,121/293/79,144/348/94,169/409/110,196/475/127,225/546/145,256/622/165,289/703/186,324/789/208,361/881/232,401/978/257,443/1080/283,488/1191/309,536/1307/337,586/1429/366,638/1556/397,692/1689/429,748/1827/462,807/1971/497,868/2120/533,931/2275/571,996/2435/610,1064/2601/650,1138/2783/690,1215/2970/732,1294/3163/775,1375/3362/820,1458/3566/866,1544/3776/914,1632/3992/963,1722/4213/1013,1815/4440/1065,1910/4673/1118,2007/4912/1173,2113/5171/1228,2221/5436/1284,2332/5707/1342,2445/5984/1401,2560/6267/1462,2678/6555/1524,2798/6849/1588,2920/7149/1653,3045/7455/1720,3172/7767/1788,3302/8085/1858,3442/8427/1928,3584/8775/1999,3728/9129/2072,3875/9489/2146,4024/9855/2222,4176/10227/2299,4330/10605/2378,4487/10989/2458,4646/11379/2540,4807/11775/2623,4971/12177/2708,5146/12607/2793,5324/13043/2879,5504/13485/2967,5687/13933/3056,5872/14387/3147,6060/14847/3239,6250/15313/3333,6443/15785/3428,6638/16263/3525,6836/16747/3623,7036/17237/3723".split(",").map(x=>x.split("/").map(Number)),SR:"3/10/2,7/23/5,12/41/9,18/63/14,26/89/20,35/120/27,45/156/35,57/197/44,70/243/54,85/293/65,101/348/77,119/409/90,138/475/104,159/546/119,181/622/135,205/703/152,230/789/170,257/881/189,285/978/209,315/1080/230,347/1191/251,381/1307/273,417/1429/296,454/1556/320,493/1689/345,533/1827/371,575/1971/398,618/2120/426,663/2275/455,710/2435/485,758/2601/516,811/2783/547,866/2970/579,922/3163/612,980/3362/646,1040/3566/681,1101/3776/717,1164/3992/754,1229/4213/792,1295/4440/831,1363/4673/871,1433/4912/912,1509/5171/953,1586/5436/995,1665/5707/1038,1746/5984/1082,1828/6267/1127,1912/6555/1173,1998/6849/1220,2085/7149/1268,2174/7455/1317,2265/7767/1367,2358/8085/1418,2458/8427/1469,2559/8775/1521,2662/9129/1574,2767/9489/1628,2874/9855/1683,2982/10227/1739,3092/10605/1796,3204/10989/1854,3318/11379/1913,3433/11775/1973,3550/12177/2034,3675/12607/2095,3802/13043/2157,3931/13485/2220,4061/13933/2284,4193/14387/2349,4327/14847/2415,4463/15313/2482,4601/15785/2550,4740/16263/2619,4881/16747/2689,5024/17237/2760".split(",").map(x=>x.split("/").map(Number))};
+const TOKEFF={SSR:[10,15,20,25,30,35],SR:[10,15,20,25,25,25]};
+// ---- Visages & stat preview ----
+const INKS={"Ink of Might":["Physical damage +5%","After a critical hit, physical damage +12% for 60s"],"Ink of Flames":["Fire damage +5%","After hitting a weak point, fire damage +24% for 20s"],"Ink of Water":["Water damage +5%","Each squadmate ultimate grants water damage +6% for 60s (up to 4 stacks)"],"Ink of Thunder":["Thunder damage +5%","After damaging a monster, thunder damage +5% for 12s (up to 5 stacks)"],"Ink of Combat":["Affinity +5%","After a debuff skill hits, the monster takes +6% damage for 30s (60s cooldown)"],"Ink of Guidance":["Ultimate charge rate +5%","After an ultimate suppresses, each squad ultimate grants squad damage +2.2% for 60s (up to 3 stacks)"],"Ink of Grace":["Ultimate charge rate +5%","When an adventurer buffs a squadmate, squad damage +6.5% for 60s"],"Ink of Protection":["Ultimate charge rate +5%","When healing or shielding a squadmate, that effect +20% and squad damage +6% for 45s"],"Ink of Dragon":["Dragon damage +5%","After using an ultimate, dragon damage +24% for 60s"],"Ink of Resonance":["Affinity +5%","When not the Main Adventurer, ultimate damage +32%"],"Ink of Frost":["Ice damage +5%","After hitting a monster, ice damage +24% for 8s"],"Kushala Daora's Tempest":["Elemental damage +2% (Season 0)","Elemental damage +3%, up to +10% while the monster is suppressed (Season 0)"]};
+// 2-piece bonuses that are flat stat % (the rest are conditional and only listed)
+const INK2={"Ink of Might":["phys",5],"Ink of Flames":["Fire",5],"Ink of Water":["Water",5],"Ink of Thunder":["Thunder",5],"Ink of Combat":["aff",5],"Ink of Guidance":["ult",5],"Ink of Grace":["ult",5],"Ink of Protection":["ult",5],"Ink of Dragon":["Dragon",5],"Ink of Resonance":["aff",5],"Ink of Frost":["Ice",5],"Kushala Daora's Tempest":["eleall",2]};
+const VIS=[["Anjanath",3,["Combat"],"After an adventurer uses a buff squadmate skill, squad damage +3.5% for 60s"],["Apceros",1,["Water","Protection"],""],["Aptonoth",1,["Protection"],""],["Barnos",1,["Flames","Dragon"],""],["Barroth",4,["Water","Protection"],"With a water weapon, water damage +7%"],["Diablos",4,["Protection"],"With a physical or ailment weapon, physical damage +3.5%"],["Gajau",1,["Water","Frost"],""],["Gastodon",1,["Might","Dragon"],""],["Girros",1,["Thunder","Combat"],""],["Great Girros",4,["Grace","Thunder"],"Paralysis Resistance +3; prevents paralysis"],["Great Jagras",3,["Resonance","Dragon"],"Quick-Bite +3; faster eating and item use"],["Hornetaur",1,["Dragon","Protection"],""],["Jagras",1,["Resonance","Combat"],""],["Jyuratodus",4,["Water","Frost"],"Unaffected by movement penalties in mud"],["Kelbi",1,["Grace","Frost"],""],["Kestodon",1,["Flames","Might"],""],["Kulu-Ya-Ku",3,["Flames","Might"],"Instinct +1; attacks won't be deflected"],["Legiana",4,["Frost"],"With an ice weapon, ice damage +7%"],["Mernos",1,["Water","Thunder"],""],["Noios",1,["Flames","Guidance"],""],["Odogaron",3,["Dragon","Combat"],"Bleeding Resistance +3; prevents bleeding"],["Paolumu",4,["Might","Resonance"],"At Windproof 3, squad is immune to all wind pressure"],["Pink Rathian",4,["Combat"],"After a debuff skill hits, the monster takes +6% damage for 30s (60s cooldown)"],["Pitcher Atecoli",1,["Guidance","Resonance"],""],["Pukei-Pukei",3,["Grace","Protection"],"When an ultimate heals a squadmate, squad damage +3.5% for 60s"],["Radiant Anjanath",3,["Might"],"During charged attacks, dragon damage +10%"],["Radiant Barroth",3,["Water"],"At highest charge level, water damage +10% for 45s"],["Radiant Diablos",3,["Dragon","Protection"],""],["Radiant Great Girros",3,["Grace","Thunder"],"After combo damage, thunder damage +10% for 15s"],["Radiant Great Jagras",4,["Guidance"],"After eating BBQ, fire damage +10% for 45s (ends after 100 damage taken)"],["Radiant Jyuratodus",3,["Water","Protection"],"After using a shield, squad defense +10 and squad damage +4% for 45s"],["Radiant Kulu-Ya-Ku",4,["Flames","Guidance"],"After combo damage, fire damage +16% for 10s (20s cooldown)"],["Radiant Legiana",3,["Frost"],""],["Radiant Odogaron",4,["Might","Combat"],""],["Radiant Paolumu",3,["Guidance"],"While airborne, water damage +10%"],["Radiant Pukei-Pukei",3,["Grace","Might"],"After a coating-consuming skill, water damage +10% for 45s"],["Radiant Radobaan",3,["Frost"],""],["Radiant Rathalos",3,["Flames"],"After using a charged skill, fire damage +10% for 15s"],["Radiant Rathian",4,["Flames"],"After rupture damage, fire damage +10% for 20s"],["Radiant Tobi-Kadachi",3,["Thunder"],"When dealing piercing damage, thunder damage +10%"],["Radiant Tzitzi-Ya-Ku",3,["Thunder"],"After dazing a monster, thunder damage +16% for 30s (60s cooldown)"],["Radobaan",3,["Resonance","Frost"],"Sleep Resistance +3; prevents sleep"],["Raphinos",1,["Grace","Frost"],""],["Rathalos",3,["Guidance","Combat"],"After an ultimate suppresses, squad damage +6% for 30s (60s cooldown)"],["Rathian",3,["Flames"],"With a fire weapon, fire damage +7%"],["Ruger Aidal",3,["Flames"],"With a fire weapon, fire damage +15% (Season 0)"],["Shamos",1,["Grace","Resonance"],""],["Tobi-Kadachi",4,["Grace","Thunder"],"With a thunder weapon, thunder damage +7%"],["Tzitzi-Ya-Ku",3,["Water"],"Daze +0.5s; after a daze the monster takes +6% damage for 30s (60s cooldown)"],["Vespoid",1,["Guidance","Thunder"],""],["Warrior Atecoli",1,["Might","Combat"],""]].map(([n,c,i,core])=>({n,c,inks:i.map(x=>"Ink of "+x),core}));
+// visage icons: one 400x200 sprite, 10 per row, 40px each (order below; card icons zoom-cropped)
+const VICON="Rathian,Pink Rathian,Rathalos,Radiant Rathalos,Diablos,Radiant Diablos,Barroth,Radiant Barroth,Anjanath,Radiant Anjanath,Radiant Great Jagras,Pukei-Pukei,Radiant Pukei-Pukei,Kulu-Ya-Ku,Radiant Kulu-Ya-Ku,Jyuratodus,Radiant Jyuratodus,Tobi-Kadachi,Paolumu,Radiant Paolumu,Legiana,Great Girros,Odogaron,Radobaan,Tzitzi-Ya-Ku,Radiant Rathian,Aptonoth,Apceros,Kelbi,Hornetaur,Vespoid,Gajau,Jagras,Mernos,Kestodon,Raphinos,Shamos,Barnos,Girros,Gastodon,Noios,Warrior Atecoli,Pitcher Atecoli,Great Jagras,Radiant Legiana,Radiant Tobi-Kadachi,Radiant Radobaan,Radiant Tzitzi-Ya-Ku,Radiant Odogaron,Radiant Great Girros".split(",");
+const vIcon=n=>{const k=VICON.indexOf(n); return k<0?`<span class="vico vnone" aria-hidden="true">${esc(n.split(/[ -]/).filter(w=>w!=="Radiant").map(w=>w[0]).join("").slice(0,2))}</span>`:`<span class="vico" role="img" aria-label="${esc(n)}" style="--x:${k%10};--y:${Math.floor(k/10)}"></span>`};
+const VMAIN={4:[["aff","Affinity %",1.75],["ult","Ultimate charge %",1.81]],3:[["ult","Ultimate charge %",1.67],["eleall","Elemental damage %",2.44]],1:[["aff","Affinity %",0.92],["ult","Ultimate charge %",0.90],["eleall","Elemental damage %",1.55]]};
+const VSUB=[["dmg","Damage %",[0.84,1.35,1.69]],["ecrit","Elemental crit damage %",[1.27,2.03,2.53]],["def","Defense",[3,5,6]],["patk","Physical attack",[15,24,30]],["Fire","Fire attack",[15,24,30]],["Water","Water attack",[15,24,30]],["Thunder","Thunder attack",[15,24,30]],["Ice","Ice attack",[15,24,30]],["Dragon","Dragon attack",[15,24,30]]];
+const QUAL=["Rare","Epic","Superior"];
+const newVSlot=()=>({v:"",ink:"",m:"",mv:0,m2:"",mv2:0,q:2,subs:[]});
+let VOPEN=-1;
+let VST={hm:false,adv:"",al:80,tok:0,cn:null,eng:{},slots:[0,1,2,3,4].map(newVSlot)};
+try{const v=JSON.parse(localStorage.getItem("forge3v")||"null"); if(v&&Array.isArray(v.slots)&&v.slots.length===5) VST=v}catch(e){}
+const saveV=()=>{try{localStorage.setItem("forge3v",JSON.stringify(VST))}catch(e){}};
+const visOf=n=>VIS.find(x=>x.n===n);
+function drawVis(){
+  const used=VST.slots.reduce((a,sl)=>a+(visOf(sl.v)?.c||0),0);
+  const vc=$("vcost"); vc.textContent=`Cost ${used} / 12`; vc.classList.toggle("over",used>12);
+  $("vhm").checked=!!VST.hm;
+  const left=i=>12-VST.slots.reduce((a,sl,j)=>a+(j===i?0:(visOf(sl.v)?.c||0)),0);
+  const pick=(i,V)=>`<button type="button" class="vpick" data-i="${i}" data-act="open" aria-expanded="${VOPEN===i}">${V?vIcon(V.n):`<span class="vico vnone">+</span>`}<span>${V?esc(V.n):"Choose visage"}</span></button>`+(VOPEN===i?`<div class="vgrid">${V?`<button type="button" class="vcell" data-i="${i}" data-pick=""><span class="vico vnone">×</span><span>Remove</span></button>`:""}${[4,3,1].map(c=>`<div class="vgh">Cost ${c}${c>left(i)?" · over 12":""}</div>`+VIS.filter(x=>x.c===c).map(x=>`<button type="button" class="vcell${x.n===(V&&V.n)?" on":""}${c>left(i)?" over":""}" data-i="${i}" data-pick="${esc(x.n)}">${vIcon(x.n)}<span>${esc(x.n.replace("Radiant ","R. "))}</span></button>`).join("")).join("")}</div>`:"");
+  $("vslots").innerHTML=VST.slots.map((sl,i)=>{ const V=visOf(sl.v);
+    if(!V) return `<div class="vslot"><div class="vrow"><span class="vlbl">${i?"Slot "+(i+1):"Core"}</span></div>${pick(i,null)}</div>`;
+    if(!V.inks.includes(sl.ink)) sl.ink=V.inks[0];
+    const mains=VMAIN[V.c]; if(!mains.some(m=>m[0]===sl.m)){sl.m=mains[0][0]; sl.mv=mains[0][2]}
+    const subs=[0,1,2,3,4].map(j=>{const sb=sl.subs[j]||{t:"",v:0}; return `<div class="vrow"><select data-i="${i}" data-f="st" data-j="${j}" aria-label="Substat ${j+1}"><option value="">— substat ${j+1} —</option>${VSUB.map(([k,n])=>`<option value="${k}"${k===sb.t?" selected":""}>${n}</option>`).join("")}</select>${sb.t?`<input type="number" step="0.01" min="0" value="${sb.v}" data-i="${i}" data-f="sv" data-j="${j}" aria-label="Substat ${j+1} value">`:""}</div>`}).join("");
+    return `<div class="vslot"><div class="vrow"><span class="vlbl">${i?"Slot "+(i+1):"Core"} · cost ${V.c}</span></div>${pick(i,V)}
+      <div class="vrow"><select data-i="${i}" data-f="ink" aria-label="Ink">${V.inks.map(k=>`<option${k===sl.ink?" selected":""}>${k}</option>`).join("")}</select>
+      <select data-i="${i}" data-f="m" aria-label="Main stat">${mains.map(([k,n])=>`<option value="${k}"${k===sl.m?" selected":""}>${n}</option>`).join("")}</select>
+      <input type="number" step="0.01" min="0" value="${sl.mv}" data-i="${i}" data-f="mv" aria-label="Main stat value">
+      <select data-i="${i}" data-f="q" aria-label="Quality">${QUAL.map((q,k)=>`<option value="${k}"${k===+sl.q?" selected":""}>${q}</option>`).join("")}</select></div>
+      ${+sl.q>=1?(()=>{ const m2=mains; if(!m2.some(m=>m[0]===sl.m2)){sl.m2=sl.m; sl.mv2=(mains.find(m=>m[0]===sl.m)||mains[0])[2]} return `<div class="vrow"><span class="vlbl">2nd main</span><select data-i="${i}" data-f="m2" aria-label="Second main stat">${m2.map(([k,n])=>`<option value="${k}"${k===sl.m2?" selected":""}>${n}</option>`).join("")}</select><input type="number" step="0.01" min="0" value="${sl.mv2}" data-i="${i}" data-f="mv2" aria-label="Second main stat value"></div>`})():""}
+      ${i===0?`<div class="vcore">Core effect: ${V.core?esc(V.core):"none"}</div>`:""}
+      <details${sl.subs.some(x=>x&&x.t)?" open":""}><summary>Substats (${sl.subs.filter(x=>x&&x.t).length}/5)</summary>${subs}</details></div>`}).join("");
+  $("vslots").querySelectorAll("[data-act=open]").forEach(b=>b.onclick=()=>{const i=+b.dataset.i; VOPEN=VOPEN===i?-1:i; drawVis()});
+  $("vslots").querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>{const sl=VST.slots[+b.dataset.i]; Object.assign(sl,newVSlot(),{v:b.dataset.pick}); VOPEN=-1; saveV(); drawVis()});
+  $("vslots").querySelectorAll("[data-f]").forEach(el=>el.addEventListener(el.tagName==="INPUT"?"input":"change",()=>{
+    const sl=VST.slots[+el.dataset.i], f=el.dataset.f, j=+el.dataset.j;
+    if(f==="v"){ Object.assign(sl,newVSlot(),{v:el.value}); }
+    else if(f==="ink") sl.ink=el.value;
+    else if(f==="m"){ sl.m=el.value; const V=visOf(sl.v); sl.mv=(VMAIN[V.c].find(m=>m[0]===sl.m)||[0,0,0])[2]; }
+    else if(f==="mv"){ sl.mv=+el.value||0; saveV(); drawVisSum(); return }
+    else if(f==="m2"){ sl.m2=el.value; const V=visOf(sl.v); sl.mv2=(VMAIN[V.c].find(m=>m[0]===sl.m2)||[0,0,0])[2]; }
+    else if(f==="mv2"){ sl.mv2=+el.value||0; saveV(); drawVisSum(); return }
+    else if(f==="q"){ sl.q=+el.value; sl.subs.forEach(sb=>{if(sb&&sb.t){const d=VSUB.find(x=>x[0]===sb.t); sb.v=d[2][sl.q]}}) }
+    else if(f==="st"){ const d=VSUB.find(x=>x[0]===el.value); sl.subs[j]=el.value?{t:el.value,v:d[2][sl.q]}:{t:"",v:0}; }
+    else if(f==="sv"){ sl.subs[j].v=+el.value||0; saveV(); drawVisSum(); return }
+    saveV(); drawVis(); }));
+  drawVisSum();
+}
+function drawVisSum(){
+  // set bonuses
+  const cnt={}; VST.slots.forEach((sl,i)=>{ if(visOf(sl.v)&&sl.ink) cnt[sl.ink]=(cnt[sl.ink]||0)+(i===0&&VST.hm?2:1) });
+  $("vsets").innerHTML=Object.keys(cnt).length?Object.entries(cnt).sort((a,b)=>b[1]-a[1]).map(([k,c])=>{const e=INKS[k]||["",""]; return `<div><strong>${esc(k)}</strong> ${c} piece${c>1?"s":""} · <span class="${c>=2?"on":""}">2: ${esc(e[0])}</span> · <span class="${c>=4?"on":""}">4: ${esc(e[1])}</span></div>`}).join(""):`<div class="note">No visages picked yet.</div>`;
+  // totals
+  const T={}; const add=(k,v,src)=>{ if(!v) return; (T[k]=T[k]||[]).push([v,src]) };
+  const W=WEAP[WSEL.a]; const ev=evalBuild(BUILD,R);
+  const A=ADV.find(a=>a[0]===VST.adv);
+  if(A){ const lv=Math.max(1,Math.min(80,VST.al||80)), al=Math.min(75,lv); const [atk,def,el]=AWK[A[4]][al-1]; const src=`${A[0]} (awakening Lv${al})`; add("aatk",atk,src); add("def",def,src); add(A[1]+"E",el,src);
+    const t=ADVCA[A[0]], k=engLv("ca"); if(t&&k){ const csrc=`${A[0]} engrave: core attribute ${["","I","II","III","IV","V"][k]}${k>1&&k<5?" (est.)":""}`; add(t==="el"?A[1]+"%":t,caVal(t,k),csrc) } }
+  if(W){ add("patk",wBase(W),"Weapon 1 ("+wName(W)+")"); if(ELEMSK[W.e]) add(W.e,wEl(W),"Weapon 1"); if(W.af) add("aff",W.af,"Weapon 1") }
+  const ins=ev.tot["Insight"]||0; if(ins) add("aff",pctOf(effect("Insight",ins)),"Armor: Insight Lv"+ins);
+  Object.entries(ELEMSK).forEach(([e,sk])=>{const lv=ev.tot[sk]||0; if(!lv) return; const t=effect(sk,lv); const fl=/attack \+(\d+)/i.exec(t); if(fl) add(e,+fl[1],`Armor: ${sk} Lv${lv}`); const pc=/dmg \+(\d+(?:\.\d+)?)%/i.exec(t); if(pc) add(e+"%",+pc[1],`Armor: ${sk} Lv${lv} (vs Radiant more)`)});
+  const ce=ev.tot["Critical Element"]||0; if(ce) add("ecrit",pctOf(effect("Critical Element",ce)),"Armor: Critical Element Lv"+ce);
+  VST.slots.forEach((sl,i)=>{ const V=visOf(sl.v); if(!V) return; const nm=`Visage: ${V.n}`; add(sl.m,+sl.mv,nm+" (main)"); if(+sl.q>=1&&sl.m2) add(sl.m2,+sl.mv2,nm+" (2nd main)"); sl.subs.forEach(sb=>{ if(sb&&sb.t) add(sb.t,+sb.v,nm) }) });
+  Object.entries(cnt).forEach(([k,c])=>{ if(c>=2&&INK2[k]){const [t,v]=INK2[k]; add(t==="phys"?"phys%":["Fire","Water","Thunder","Ice","Dragon"].includes(t)?t+"%":t,v,k+" (2-piece)")} });
+  const cpn=A?engLv("cp"):0;
+  if(A&&cpn>=1){ const cp=ADVCP[A[0]], spec=W&&W.e===A[1], sum=k=>(T[k]||[]).reduce((a,[v])=>a+v,0), nm=`${A[0]} core passive ${ROMAN[cpn]}`;
+    if(cp&&spec){
+      if(cp[0]){ const base=cp[0]==="aff"?sum("aff"):sum(A[1]+"%")+sum("eleall"), cap=cp[2][Math.min(cpn,3)-1], v=Math.min(cap,Math.round(base*cp[1]*100)/100); add("dmg",v,`${nm} (${cp[1]}% per 1% ${cp[0]==="aff"?"affinity":A[1]+" damage"}, cap ${cap}%)`) }
+      if(cpn>=4&&cp[3]==="eatk"){ const ea=sum(A[1]), v=Math.floor(Math.max(0,ea-1500)/100)*2.5; add("dmg",v,`${nm} (+2.5% per 100 ${A[1]} attack over 1500)`) }
+      if(cpn>=4&&cp[3]==="ecrit"){ const ec=sum("ecrit"), v=Math.round(Math.max(0,ec-20)*0.5*100)/100; add("dmg",v,`${nm} (+0.5% per 1% elemental crit damage over 20%)`) } }
+  }
+  const ROWS=[["aatk","Adventurer attack",""],["patk","Physical attack",""],["phys%","Physical damage","%"],...["Fire","Water","Thunder","Ice","Dragon"].flatMap(e=>[[e,e+" attack",""],[e+"E",e+" damage (adventurer)",""],[e+"%",e+" damage","%"]]),["eleall","Elemental damage (all)","%"],["ecrit","Elemental crit damage","%"],["dmg","Damage","%"],["aff","Affinity","%"],["ult","Ultimate charge rate","%"],["def","Defense",""]];
+  const fmt=(v,u)=>(Math.round(v*100)/100)+u;
+  const rows=ROWS.filter(([k])=>T[k]).map(([k,n,u])=>{const tot=T[k].reduce((a,[v])=>a+v,0); return `<tr><td>${n}<div class="src">${T[k].map(([v,s])=>esc(s)+" "+(v>0&&u?"+":"")+fmt(v,u)).join(" · ")}</div></td><td class="n">${(tot>0&&u?"+":"")+fmt(tot,u)}</td></tr>`});
+  $("vsum").innerHTML=(rows.length?`<table class="vsum"><tr><th>Stat</th><th style="text-align:right">Total</th></tr>${rows.join("")}</table>`:`<p class="note">Pick a weapon, armor or visages to see totals.</p>`);
+}
+// Engrave "Core Attribute" line (gacha.gg, Nov 2026): unlocks at adventurer Lv80. Only nodes I and V are published; II–IV are linear estimates.
+const ADVCA={Arkaya:"el",Freya:"el",Haze:"el",Keres:"aff",Luka:"el",Midori:"aff",Pepper:"el",Pyro:"el",Rhodes:"el",Luxheart:"el",Madelyn:"ult","Ouyang Varen":"el",Raya:"ult",Ryunosuke:"ult"};
+const CAV={el:[6,22.5],aff:[4,15],ult:[2.4,9]};
+const caVal=(t,k)=>k<1?0:Math.round((CAV[t][0]+(CAV[t][1]-CAV[t][0])*(k-1)/4)*100)/100;
+const caName=(t,A)=>t==="aff"?"Affinity":t==="ult"?"Ultimate charge rate":A[1]+" damage";
+// Core passive (engrave, unlocks Lv50; caps rise at Lv60/70; Lv80 adds a 2nd clause). Only always-on damage conversions are added to totals.
+// [what converts, % damage per 1%, caps at Lv50/60/70+, Lv80 clause: "eatk" = +2.5% per 100 element attack over 1500, "ecrit" = +0.5% per 1% elemental crit dmg over 20%]
+const ADVCP={Midori:["aff",0.25,[9,15,22.5],"ecrit"],Luka:["el",0.2,[9,15,22.5],"eatk"],Pyro:["el",0.2,[9,15,22.5],"eatk"],Rhodes:["el",0.2,[9,15,22.5],"eatk"],"Ouyang Varen":["el",0.2,[9,15,22.5],"eatk"],Freya:[null,0,null,"eatk"]};
+const ROMAN=["","I","II","III","IV","V","VI","VII"];
+// [effect text with {c} for the cap, caps at nodes I/II/III, extra clause added at node IV]
+const CPD={Arkaya:["Per 1% Dragon damage, the Ultimate gives the squad 0.25 shield and 0.1% affinity (max {c}).",["12 shield, 4.8% affinity","20 shield, 8% affinity","30 shield, 12% affinity"],"Each 100 Dragon attack over 1500: the Ultimate adds 2 more shield and 1% more affinity."],
+ Freya:["Per 1% Fire damage, monsters toppled by her Ultimate stay down 0.0125s longer (max {c}).",["0.6s","1s","1.5s"],"Each 100 Fire attack over 1500: +2.5% damage."],
+ Haze:["Per 1% Thunder damage, the Ultimate gives the squad 0.3% elemental crit damage for 15s (max {c}).",["15%","24%","36%"],"Each 100 Thunder attack over 1500: the Ultimate adds 2.5% more squad elemental crit damage."],
+ Keres:["Per 1% affinity, bone-spiked monsters take 0.2% more Ultimate damage (max {c}).",["6%","10%","15%"],"Each 1% elemental crit damage over 20%: bone-spiked monsters take 0.2% more."],
+ Luka:["Per 1% Thunder damage, +0.2% damage (max {c}).",["9%","15%","22.5%"],"Each 100 Thunder attack over 1500: +2.5% damage."],
+ Midori:["Per 1% affinity, +0.25% damage (max {c}).",["9%","15%","22.5%"],"Each 1% elemental crit damage over 20%: +0.5% damage."],
+ Pepper:["Per 1% Water damage, monsters suppressed by the Ultimate take 0.15% more damage for 15s (max {c}).",["6%","10%","15%"],"Each 100 Water attack over 1500: they take 1% more."],
+ Pyro:["Per 1% Dragon damage, +0.2% damage (max {c}).",["9%","15%","22.5%"],"Each 100 Dragon attack over 1500: +2.5% damage."],
+ Rhodes:["Per 1% Ice damage, +0.2% damage (max {c}).",["9%","15%","22.5%"],"Each 100 Ice attack over 1500: +2.5% damage."],
+ Luxheart:["Per 1% Thunder damage, +0.15% damage to dazed monsters (max {c}).",["6%","10%","15%"],"Each 100 Thunder attack over 1500: +1% more to dazed monsters."],
+ Madelyn:["Per 1% charge rate, her Ultimate heals the squad 1 HP and gives +0.2% damage for 10s (max {c}).",["12 HP, 4%","20 HP, 6.7%","30 HP, 10%"],"Each 100 Water attack over 1500: the Ultimate's damage bonus +1%."],
+ "Ouyang Varen":["Per 1% Water damage, +0.2% damage (max {c}).",["9%","15%","22.5%"],"Each 100 Water attack over 1500: +2.5% damage."],
+ Raya:["Per 1% charge rate, monsters trapped by her Ultimate stay 0.03s longer (max {c}).",["0.6s","1s","1.5s"],"Each 100 Fire attack over 1500: monsters hit by the Ultimate take 1% more Fire damage for 15s."],
+ Ryunosuke:["Per 1% charge rate, his Ultimate gives the squad +0.3% Fire damage for 20s (max {c}).",["6%","10%","15%"],"Each 100 Fire attack over 1500: +2% more squad Fire damage."]};
+// engrave lines: unlock level of each node (gacha.gg, same for every adventurer; SR Elemental Specialization stops at V)
+const ENGL=[["cp","Core Passive",[0,50,60,70,80]],["ca","Core Attribute",[0,80,80,80,80,80]]];
+const engUnl=key=>ENGL.find(l=>l[0]===key)[2];
+function engLv(key){ const A=ADV.find(a=>a[0]===VST.adv); if(!A) return 0; const U=engUnl(key,A), lv=VST.al||80; VST.eng=VST.eng||{}; let k=key==="ca"?VST.cn:VST.eng[key];
+  const mx=U.reduce((m,u,i)=>u<=lv?i:m,0); if(k==null||k==="") k=mx; return Math.max(0,Math.min(+k,mx)) }
+function engName(key,k){ return k?ROMAN[k]:(key==="cp"?"Not unlocked":"Not engraved") }
+function engDesc(key,k,A){ const El=A[1];
+  if(key==="cp"){ if(!k) return "Unlocks at Lv50."; const d=CPD[A[0]]; return d?`With a ${El} weapon: `+d[0].replace("{c}",d[1][Math.min(k,3)-1])+(k>=4?" "+d[2]:""):"" }
+  if(key==="ca"){ const t=ADVCA[A[0]]; return k?`${caName(t,A)} +${caVal(t,k)}%${k>1&&k<5?" (estimated between the published I and V values)":""}.`:`${caName(ADVCA[A[0]],A)} line. Unlocks at Lv80.` } }
+function fillEng(){
+  const A=ADV.find(a=>a[0]===VST.adv), box=$("veng"); if(!A){ box.innerHTML=""; box.className=""; return }
+  const lv=VST.al||80, W=WEAP[WSEL.a];
+  box.className="veng";
+  box.innerHTML=`<h4>${esc(A[0])} engrave nodes</h4><div class="eg">`+ENGL.map(([key,name])=>{ const U=engUnl(key,A), cur=engLv(key);
+    return `<div class="field"><label for="eng-${key}">${name}</label><select id="eng-${key}" data-eng="${key}">${U.map((u,i)=>`<option value="${i}"${i===cur?" selected":""}${u>lv?" disabled":""}>${engName(key,i)}${u>1?` · Lv${u}`:""}${u>lv?" (locked)":""}</option>`).join("")}</select><p class="ed">${esc(engDesc(key,cur,A))}</p></div>` }).join("")+`</div>`
+    +(W&&ELEMSK[W.e]&&W.e!==A[1]?`<p class="ew">Weapon 1 is ${esc(W.e)}, but ${esc(A[0])} specializes in ${A[1]}, so the Core Passive doesn't apply.</p>`:"")
+    +(lv>75?`<p class="ed">Awakening stats are only published to Lv75, so Lv76–80 use the Lv75 numbers.</p>`:"");
+  box.querySelectorAll("[data-eng]").forEach(sel=>sel.onchange=()=>{ const key=sel.dataset.eng; if(key==="ca") VST.cn=+sel.value; else { VST.eng=VST.eng||{}; VST.eng[key]=+sel.value } saveV(); fillEng(); drawVisSum() });
+}
+let AOPEN=false;
+function aIcon(n){const i=ADV.findIndex(a=>a[0]===n); return i<0?`<span class="aico vnone">+</span>`:`<span class="aico" style="--x:${i%7};--y:${Math.floor(i/7)}" role="img" aria-label="${esc(n)}"></span>`}
+function fillAdv(){
+  const cur=ADV.find(a=>a[0]===VST.adv);
+  $("vadv").innerHTML=`<button type="button" class="vpick" aria-expanded="${AOPEN}">${aIcon(VST.adv)}<span>${cur?esc(cur[0])+` <small class="asub">${cur[4]} · ${cur[1]}</small>`:"Choose adventurer"}</span></button>`;
+  $("vadvgrid").innerHTML=AOPEN?`<div class="vgrid">${cur?`<button type="button" class="vcell" data-adv=""><span class="aico vnone">×</span><span>None</span></button>`:""}${["SSR","SR"].map(r=>`<div class="vgh">${r}</div>`+ADV.filter(a=>a[4]===r).map(a=>`<button type="button" class="vcell${a[0]===VST.adv?" on":""}" data-adv="${esc(a[0])}">${aIcon(a[0])}<span>${esc(a[0])}</span><span class="asub">${a[1]} · ${a[3]}</span></button>`).join("")).join("")}</div>`:"";
+  $("vadv").querySelector("button").onclick=()=>{AOPEN=!AOPEN; fillAdv()};
+  $("vadvgrid").querySelectorAll("[data-adv]").forEach(b=>b.onclick=()=>{if(VST.adv!==b.dataset.adv){VST.eng={}; VST.cn=null} VST.adv=b.dataset.adv; AOPEN=false; saveV(); fillAdv(); drawVisSum()});
+  const A=ADV.find(a=>a[0]===VST.adv); $("val").value=VST.al||80; $("val").disabled=!A; $("vtok").disabled=!A;
+  fillCore();
+}
+function fillCore(){
+  const A=ADV.find(a=>a[0]===VST.adv);
+  const eff=TOKEFF[A?A[4]:"SSR"]; $("vtok").innerHTML=eff.map((e,k)=>`<option value="${k}"${k===+VST.tok?" selected":""}>Level ${k} · effect ${e}%</option>`).join("");
+  fillEng();
+}
+$("val").addEventListener("change",()=>{VST.al=Math.max(1,Math.min(80,Math.round(+$("val").value||1))); saveV(); fillCore(); drawVisSum()});
+$("vtok").addEventListener("change",()=>{VST.tok=+$("vtok").value; saveV(); drawVisSum()});
+fillAdv();
+$("vhm").addEventListener("change",()=>{VST.hm=$("vhm").checked; saveV(); drawVisSum()});
+$("vreset").addEventListener("click",()=>{VST={hm:VST.hm,adv:VST.adv,al:VST.al,tok:VST.tok,cn:VST.cn,eng:VST.eng,slots:[0,1,2,3,4].map(newVSlot)}; saveV(); drawVis()});
+const _drawWeapV=drawWeap; drawWeap=function(){_drawWeapV(); if($("vsum")){ fillEng(); drawVisSum() }};
+drawVis();
 ["dbq","dbslot","dbcat","dbweap","dbavail"].forEach(id=>$(id).addEventListener("input",drawDB));
 const _setR=setR; setR=function(r){_setR(r); drawDB();};
 initControls(); $("rbadge").textContent="R"+R; drawSlots(); run(); drawDB();
