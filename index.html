@@ -190,6 +190,25 @@ tr.cur td{background:var(--accent-soft)}
 .vtile[class*=vq]{border-color:var(--qc);background:linear-gradient(180deg,color-mix(in srgb,var(--qc) 30%,transparent),color-mix(in srgb,var(--qc) 8%,transparent))}
 .vtile[class*=vq] .vico{box-shadow:0 0 0 2px var(--qc),0 0 14px color-mix(in srgb,var(--qc) 55%,transparent)}
 .vtile[class*=vq] .vtc{color:var(--qc);font-weight:600}
+.vtile{position:relative}
+.vink{position:absolute;top:4px;left:4px;width:22px;height:22px;display:grid;place-items:center;border-radius:50%;background:var(--panel);box-shadow:0 0 0 1px var(--line);font:700 .62rem var(--mono)}
+.vink img{width:20px;height:20px;object-fit:contain}
+.vbody{display:flex;flex-direction:column;gap:14px}
+.vmini{display:grid;gap:10px}
+.vmini .vmrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.vmini .vmi{position:relative;display:inline-grid}
+.vmini .vmi .vico{--s:44px}
+.vmini .vmi .aico{--s:52px}
+.vmini .vmi[class*=vq] .vico{box-shadow:0 0 0 2px var(--qc)}
+.vmini .vmi.vq0{--qc:#4f8fe8} .vmini .vmi.vq1{--qc:#a066e8} .vmini .vmi.vq2{--qc:#e0a63a}
+.vmini .vmi .vink{top:-6px;left:-6px;width:18px;height:18px} .vmini .vmi .vink img{width:16px;height:16px}
+.vmini .vsep{width:1px;align-self:stretch;background:var(--line);margin:0 4px}
+.vmini .vmsets{font-size:.85rem;display:grid;gap:2px}
+.vmini .vmsets .on{color:var(--good)}
+.vmini .vmstats{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px 14px;font-size:.85rem}
+.vmini .vmstats div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dashed var(--line);padding:2px 0}
+.vmini .vmstats b{font-family:var(--mono)}
+.wabout summary{cursor:pointer;font-size:.82rem;color:var(--muted)}
 .vtile .vtc{font-weight:400;font-size:.7rem;color:var(--muted);margin-top:-4px}
 .vleft .vlbl{white-space:nowrap}
 .vtile .vtn{font-size:.8rem;line-height:1.2;overflow-wrap:anywhere}
@@ -345,25 +364,11 @@ tr.cur td{background:var(--accent-soft)}
     </section>
   </div>
 
-  <section class="panel" aria-labelledby="w-h">
-    <h2 id="w-h">Weapon compare</h2>
-    <p class="note" style="margin:0">Pick a weapon type and element, then two weapons. The comparison uses the armor set in your loadout builder, plus the visages and adventurer from the Visages section if you've picked any.</p>
-    <div class="wctl">
-      <div class="field"><label for="wtype">Weapon type</label><select id="wtype"></select></div>
-      <div class="field"><label for="welem">Element</label><select id="welem"></select></div>
-      <div class="field" id="waef" hidden><label for="wae">Apex weapon element</label><select id="wae"></select></div>
-      <div class="field"><label for="wa">Weapon 1</label><select id="wa"></select></div>
-      <div class="field"><label for="wb">Weapon 2</label><select id="wb"></select></div>
-    </div>
-    <div id="wawk"></div>
-    <div class="scroll"><table class="wtab" id="wtab"><tbody></tbody></table></div>
-    <div id="wsum" class="wsum"></div>
-    <div id="warmor" class="wlist"></div>
-    <p class="note" style="margin:0">Weapon data: fan-made list, snapshot Nov 1 2026. It has no slots, skills or element values, and the source only gives two unlabelled attack numbers. Attack = the larger number, element attack = the smaller one, total = both added (this matches every element weapon that has a Raw twin, e.g. 520 + 1,040 = 1,560; it is inferred, not stated by the source). Compare weapons of the same type only. Stats are for the fully upgraded form (max rarity); the source has no stats for lower rarities.</p>
-  </section>
 
   <section class="panel" aria-labelledby="v-h">
-    <h2 id="v-h">Visages &amp; stat preview</h2>
+    <div class="dbhead"><h2 id="v-h">Visages &amp; stat preview</h2><button id="vtoggle" type="button" aria-expanded="true" aria-controls="vbody">Collapse</button></div>
+    <div id="vmini" class="vmini" hidden></div>
+    <div id="vbody" class="vbody">
     <p class="note">Pick up to 5 visages (12 cost max). The first slot is the core. Choose each one's ink, main stat and rolled substats, and the summary below adds them to your Weapon 1 and armor skills.</p>
     <div class="vtop"><span id="vcost" class="vcost"></span><label class="mixtog"><input type="checkbox" id="vhm"> <span>Hunting Master 1 (core counts as 2 pieces)</span></label><button type="button" id="vreset">Reset</button></div>
     <div class="vadv">
@@ -378,6 +383,24 @@ tr.cur td{background:var(--accent-soft)}
     <h3 class="vh3">Stat preview</h3>
     <div id="vsum"></div>
     <p class="note">Visage data from game8 and GameWith (Nov 2026); visage icons, adventurer portraits and equipment icons (loaded from gacha.gg) © Capcom, used for this non-commercial fan tool. Flat numbers and percentages are added up as listed; the game's final damage formula isn't public, so this isn't your in-game sheet number. Adventurer awakening stats, awakening token and engrave values are from gacha.gg.</p>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="w-h">
+    <h2 id="w-h">Weapon compare</h2>
+    <p class="note" style="margin:0">Pick a weapon type and element, then two weapons. The comparison uses the armor set in your loadout builder, plus the visages and adventurer from the Visages section if you've picked any.</p>
+    <div class="wctl">
+      <div class="field"><label for="wtype">Weapon type</label><select id="wtype"></select></div>
+      <div class="field"><label for="welem">Element</label><select id="welem"></select></div>
+      <div class="field" id="waef" hidden><label for="wae">Apex weapon element</label><select id="wae"></select></div>
+      <div class="field"><label for="wa">Weapon 1</label><select id="wa"></select></div>
+      <div class="field"><label for="wb">Weapon 2</label><select id="wb"></select></div>
+    </div>
+    <div id="wawk"></div>
+    <div class="scroll"><table class="wtab" id="wtab"><tbody></tbody></table></div>
+    <div id="wsum" class="wsum"></div>
+    <div id="warmor" class="wlist"></div>
+    <details class="wabout"><summary>About the weapon data</summary><p class="note">Weapon data: fan-made list, snapshot Nov 1 2026. It has no slots, skills or element values, and the source only gives two unlabelled attack numbers. Attack = the larger number, element attack = the smaller one, total = both added (this matches every element weapon that has a Raw twin, e.g. 520 + 1,040 = 1,560; it is inferred, not stated by the source). Compare weapons of the same type only. Stats are for the fully upgraded form (max rarity); the source has no stats for lower rarities.</p></details>
   </section>
 
   <section class="panel" aria-labelledby="db-h">
@@ -1310,6 +1333,9 @@ const VMAIN={4:[["aff","Affinity %",1.75,0.88],["ult","Ultimate charge %",1.81,0
 // Main stats are counted at visage Lv10: 4 roll stages between the low and high value. Ruger Aidal's visage has one fixed, higher value per stat (game8).
 const VMAINX={"Ruger Aidal":[["ult","Ultimate charge %",2.92],["eleall","Elemental damage %",4.27]]};
 const vMains=V=>VMAINX[V.n]||VMAIN[V.c];
+// ink set icons (gacha.gg); Ink of Might has no published icon, so it shows a letter
+const INKICO={"Ink of Flames":"Blaze-80455be9","Ink of Water":"Tide-a9d52ffa","Ink of Thunder":"Bolt-c397993c","Ink of Frost":"Frost-c7f06a51","Ink of Dragon":"Drake-d869fb43","Ink of Protection":"Guard-eca3adad","Ink of Combat":"Assault-cd1afeb9","Ink of Grace":"Grace-2cb1524a","Ink of Resonance":"Arts-29caa116","Ink of Guidance":"Bind-d3e905bf"};
+const inkIcon=k=>k?`<span class="vink" title="${esc(k)}">${INKICO[k]?`<img src="${GGIMG("AmuletSuitIcon/AmuletSuitIcon_"+INKICO[k]+".webp")}" alt="${esc(k)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.replaceWith(document.createTextNode('${esc(k.replace("Ink of ","")[0])}'))">`:esc(k.replace("Ink of ","")[0])}</span>`:"";
 // [key, label, max per quality Rare/Epic/Superior, min per quality]
 const VSUB=[["dmg","Damage %",[0.84,1.35,1.69],[0.51,1.01,1.43]],["ecrit","Elemental crit damage %",[1.27,2.03,2.53],[0.76,1.52,2.15]],["def","Defense",[3,5,6],[2,4,6]],["patk","Physical attack",[15,24,30],[10,18,26]],["Fire","Fire attack",[15,24,30],[10,18,26]],["Water","Water attack",[15,24,30],[10,18,26]],["Thunder","Thunder attack",[15,24,30],[10,18,26]],["Ice","Ice attack",[15,24,30],[10,18,26]],["Dragon","Dragon attack",[15,24,30],[10,18,26]]];
 // 4 evenly spaced roll stages from low to high (flat stats round to whole numbers)
@@ -1329,7 +1355,7 @@ function drawVis(){
   const vc=$("vcost"); vc.textContent=`Cost ${used} / 12`; vc.classList.toggle("over",used>12);
   $("vhm").checked=!!VST.hm;
   const left=i=>12-VST.slots.reduce((a,sl,j)=>a+(j===i?0:(visOf(sl.v)?.c||0)),0);
-  const tile=(i,V)=>`<div class="vleft"><span class="vlbl">${i?"Slot "+(i+1):"Core"}</span><button type="button" class="vpick vtile${V?" vq"+(+VST.slots[i].q||0):""}" data-i="${i}" data-act="open" aria-expanded="${VOPEN===i}" title="${V?"Change visage":"Choose visage"}">${V?vIcon(V.n):`<span class="vico vnone">+</span>`}<span class="vtn">${V?esc(V.n):"Choose visage"}</span>${V?`<small class="vtc">${QUAL[+VST.slots[i].q||0]} · Cost ${V.c}</small>`:""}</button></div>`;
+  const tile=(i,V)=>`<div class="vleft"><span class="vlbl">${i?"Slot "+(i+1):"Core"}</span><button type="button" class="vpick vtile${V?" vq"+(+VST.slots[i].q||0):""}" data-i="${i}" data-act="open" aria-expanded="${VOPEN===i}" title="${V?"Change visage":"Choose visage"}">${V?inkIcon(VST.slots[i].ink):""}${V?vIcon(V.n):`<span class="vico vnone">+</span>`}<span class="vtn">${V?esc(V.n):"Choose visage"}</span>${V?`<small class="vtc">${QUAL[+VST.slots[i].q||0]} · Cost ${V.c}</small>`:""}</button></div>`;
   const grid=(i,V)=>(VOPEN===i?`<div class="vgrid">${V?`<button type="button" class="vcell" data-i="${i}" data-pick=""><span class="vico vnone">×</span><span>Remove</span></button>`:""}${[4,3,1].map(c=>`<div class="vgh">Cost ${c}${c>left(i)?" · over 12":""}</div>`+VIS.filter(x=>x.c===c).map(x=>`<button type="button" class="vcell${x.n===(V&&V.n)?" on":""}${c>left(i)?" over":""}" data-i="${i}" data-pick="${esc(x.n)}">${vIcon(x.n)}<span>${esc(x.n.replace("Radiant ","R. "))}</span></button>`).join("")).join("")}</div>`:"");
   $("vslots").innerHTML=VST.slots.map((sl,i)=>{ const V=visOf(sl.v);
     if(!V) return `<div class="vslot vcard vempty">${tile(i,null)}<div class="vright"><p class="vhint">Empty slot. Tap the tile to pick a visage.</p></div>${grid(i,null)}</div>`;
@@ -1394,6 +1420,11 @@ function drawVisSum(){
   const ROWS=[["aatk","Adventurer attack",""],["patk","Physical attack",""],["phys%","Physical damage","%"],...["Fire","Water","Thunder","Ice","Dragon"].flatMap(e=>[[e,e+" attack",""],[e+"E",e+" damage (adventurer)",""],[e+"%",e+" damage","%"]]),["eleall","Elemental damage (all)","%"],["ecrit","Elemental crit damage","%"],["dmg","Damage","%"],["aff","Affinity","%"],["ult","Ultimate charge rate","%"],["def","Defense",""]];
   const fmt=(v,u)=>(Math.round(v*100)/100)+u;
   const rows=ROWS.filter(([k])=>T[k]).map(([k,n,u])=>{const tot=T[k].reduce((a,[v])=>a+v,0); return `<tr><td>${n}<div class="src">${T[k].map(([v,s])=>esc(s)+" "+(v>0&&u?"+":"")+fmt(v,u)).join(" · ")}</div></td><td class="n">${(tot>0&&u?"+":"")+fmt(tot,u)}</td></tr>`});
+  const mini=ROWS.filter(([k])=>T[k]).map(([k,n,u])=>{const tot=T[k].reduce((a,[v])=>a+v,0); return `<div><span>${n}</span><b>${(tot>0&&u?"+":"")+fmt(tot,u)}</b></div>`}).join("");
+  const sets=Object.entries(cnt).filter(([,c])=>c>=2).sort((a,b)=>b[1]-a[1]).map(([k,c])=>{const e=INKS[k]||["",""]; return `<div><strong>${esc(k)}</strong> ${c}pc · <span class="on">${esc(e[0])}</span>${c>=4?` · <span class="on">${esc(e[1])}</span>`:""}</div>`}).join("");
+  const icons=VST.slots.map(sl=>{const V=visOf(sl.v); return V?`<span class="vmi vq${+sl.q||0}" title="${esc(V.n)} · ${QUAL[+sl.q||0]}">${inkIcon(sl.ink)}${vIcon(V.n)}</span>`:""}).join("");
+  $("vmini").innerHTML=`<div class="vmrow">${A?`<span class="vmi" title="${esc(A[0])} Lv${VST.al||80}">${aIcon(A[0])}</span><span class="vsep"></span>`:""}${icons||`<span class="note">No visages picked.</span>`}</div>`
+    +(sets?`<div class="vmsets">${sets}</div>`:"")+(mini?`<div class="vmstats">${mini}</div>`:"");
   $("vsum").innerHTML=(rows.length?`<table class="vsum"><tr><th>Stat</th><th style="text-align:right">Total</th></tr>${rows.join("")}</table>`:`<p class="note">Pick a weapon, armor or visages to see totals.</p>`);
 }
 // Engrave "Core Attribute" line (gacha.gg, Nov 2026): unlocks at adventurer Lv80. Only nodes I and V are published; II–IV are linear estimates.
@@ -1459,6 +1490,9 @@ $("val").addEventListener("change",()=>{VST.al=Math.max(1,Math.min(80,Math.round
 $("vtok").addEventListener("change",()=>{VST.tok=+$("vtok").value; saveV(); drawVisSum()});
 fillAdv();
 $("vhm").addEventListener("change",()=>{VST.hm=$("vhm").checked; saveV(); drawVisSum()});
+const setVis=(open,keep=true)=>{ $("vbody").hidden=!open; $("vmini").hidden=open; $("vtoggle").textContent=open?"Collapse":"Expand"; $("vtoggle").setAttribute("aria-expanded",open); if(keep){try{localStorage.setItem("forge3vc",open?"1":"0")}catch(e){}} };
+$("vtoggle").onclick=()=>setVis($("vbody").hidden);
+try{ if(localStorage.getItem("forge3vc")==="0") setVis(false,false) }catch(e){}
 $("vreset").addEventListener("click",()=>{VST={hm:VST.hm,adv:VST.adv,al:VST.al,tok:VST.tok,cn:VST.cn,eng:VST.eng,slots:[0,1,2,3,4].map(newVSlot)}; saveV(); drawVis()});
 const _drawWeapV=drawWeap; drawWeap=function(){_drawWeapV(); if($("vsum")){ fillEng(); drawVisSum() }};
 const _drawVisSumW=drawVisSum; drawVisSum=function(){_drawVisSumW(); _drawWeapV()};
