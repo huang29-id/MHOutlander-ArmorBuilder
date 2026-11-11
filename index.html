@@ -276,6 +276,7 @@ tr.cur td{background:var(--accent-soft)}
     <div class="wctl">
       <div class="field"><label for="wtype">Weapon type</label><select id="wtype"></select></div>
       <div class="field"><label for="welem">Element</label><select id="welem"></select></div>
+      <div class="field" id="waef" hidden><label for="wae">Apex weapon element</label><select id="wae"></select></div>
       <div class="field"><label for="wa">Weapon 1</label><select id="wa"></select></div>
       <div class="field"><label for="wb">Weapon 2</label><select id="wb"></select></div>
     </div>
@@ -1067,16 +1068,21 @@ const WEAP=[["GS", "Barroth Shredder VI", "Paralysis", 631, 1262, -3, "2★–14
 ["BW", "Snowfletcher VI", "Ice", 484, 967, null, "8★–14★", null],
 ["BW", "Water Shot VI", "Water", 484, 967, null, "2★–14★", null]].map(([t,n,e,a1,a2,af,r,sh],i)=>({i,t,n,e,a1,a2,af,r,sh}));
 const WELEM_ORDER=["Fire","Water","Thunder","Ice","Dragon","Poison","Paralysis","Sleep","Blast","Raw"];
+// Ruger Aidal Apex weapons: one weapon per type, element chosen when crafting (the data has a variant per element)
+const APEX=["Luminous Durandal","Dawnlit Joyeuse","Lucent Hauteclaire","Sonorous Olifant","Gleaming Curtana","Resplendent Montauban","Scintillant Bayard","Brilliant Hippogriff"];
+WEAP.forEach(w=>{w.base=w.n.replace(/ \((Fire|Water|Thunder|Ice|Dragon)\)$/,""); w.apex=APEX.includes(w.base)});
+const APEXEL=["Fire","Water","Thunder","Ice","Dragon","Raw"];
+const wName=w=>w.apex?`${w.base} (Apex · ${w.e})`:w.n;
 const ELEMSK={Fire:"Fire Damage Up",Water:"Water Damage Up",Thunder:"Thunder Damage Up",Ice:"Ice Damage Up",Dragon:"Dragon Damage Up"};
 const AFF_COND=["Weakspot Exploit","Battle Spirit","Unleashed"];
 const pctOf=t=>{const m=/([+-]?\d+(?:\.\d+)?)%/.exec(t||""); return m?+m[1]:0};
 const sgn=v=>(v>0?"+":"")+v+"%";
-let WSEL={t:"GS",e:null,a:-1,b:-1};
-try{const sv=JSON.parse(localStorage.getItem("forge3w")||"null"); if(sv&&WT.some(x=>x[0]===sv.t)) WSEL={t:sv.t,e:sv.e===undefined?null:sv.e,a:sv.a,b:sv.b}}catch(e){}
+let WSEL={t:"GS",e:null,a:-1,b:-1,ae:"Fire"};
+try{const sv=JSON.parse(localStorage.getItem("forge3w")||"null"); if(sv&&WT.some(x=>x[0]===sv.t)) WSEL={t:sv.t,e:sv.e===undefined?null:sv.e,a:sv.a,b:sv.b,ae:APEXEL.includes(sv.ae)?sv.ae:"Fire"}}catch(e){}
 const saveW=()=>{try{localStorage.setItem("forge3w",JSON.stringify(WSEL))}catch(e){}};
 const wElems=t=>WELEM_ORDER.filter(e=>WEAP.some(w=>w.t===t&&w.e===e));
 const wBase=w=>w.e==="Raw"?w.a1:w.a2, wEl=w=>w.e==="Raw"?0:w.a1, wTotal=w=>w.e==="Raw"?w.a1:w.a1+w.a2;
-const wList=()=>WEAP.filter(w=>w.t===WSEL.t&&(!WSEL.e||w.e===WSEL.e)).sort((x,y)=>(x.e==="Raw")-(y.e==="Raw")||wTotal(y)-wTotal(x)||x.n.localeCompare(y.n));
+const wList=()=>WEAP.filter(w=>w.t===WSEL.t&&(!WSEL.e||w.e===WSEL.e)&&(!w.apex||w.e===(WSEL.e||WSEL.ae))).sort((x,y)=>(x.e==="Raw")-(y.e==="Raw")||wTotal(y)-wTotal(x)||x.n.localeCompare(y.n));
 function wDefaultElem(){
   const q=REQS.find(q=>!isSet(q)&&ELEM[q[0]]); const want=q?ELEM[q[0]][0].toUpperCase()+ELEM[q[0]].slice(1):"Fire";
   return wElems(WSEL.t).includes(want)?want:wElems(WSEL.t)[0];
@@ -1085,10 +1091,16 @@ function fillWeap(){
   const els=wElems(WSEL.t); if(WSEL.e===null||(WSEL.e&&!els.includes(WSEL.e))) WSEL.e=wDefaultElem();
   $("wtype").innerHTML=WT.map(([c,n])=>`<option value="${c}"${c===WSEL.t?" selected":""}>${n}</option>`).join("");
   $("welem").innerHTML=`<option value=""${WSEL.e===""?" selected":""}>All elements</option>`+els.map(e=>`<option value="${e}"${e===WSEL.e?" selected":""}>${e==="Raw"?"Raw (no element)":e}</option>`).join("");
+  // an Apex weapon picked before switching its element keeps being the same weapon
+  const remap=id=>{const w=WEAP[id]; if(!w||!w.apex) return id; const want=WSEL.e||WSEL.ae; const v=WEAP.find(x=>x.apex&&x.base===w.base&&x.e===want); return v?v.i:id};
+  WSEL.a=remap(WSEL.a); WSEL.b=remap(WSEL.b);
+  const hasApex=WEAP.some(w=>w.apex&&w.t===WSEL.t);
+  $("waef").hidden=!(hasApex&&!WSEL.e);
+  $("wae").innerHTML=APEXEL.map(e=>`<option value="${e}"${e===WSEL.ae?" selected":""}>${e==="Raw"?"Raw (no element)":e}</option>`).join("");
   const list=wList(); const ids=list.map(w=>w.i);
   if(!ids.includes(WSEL.a)) WSEL.a=ids[0]??-1;
   if(!ids.includes(WSEL.b)||WSEL.b===WSEL.a) WSEL.b=ids.find(x=>x!==WSEL.a)??WSEL.a;
-  const opt=(w,cur)=>`<option value="${w.i}"${w.i===cur?" selected":""}>${esc(w.n)} · ${w.e} · ${wTotal(w).toLocaleString()}</option>`;
+  const opt=(w,cur)=>`<option value="${w.i}"${w.i===cur?" selected":""}>${esc(w.apex?w.base+" (Apex)":w.n)} · ${w.e} · ${wTotal(w).toLocaleString()}</option>`;
   $("wa").innerHTML=list.map(w=>opt(w,WSEL.a)).join(""); $("wb").innerHTML=list.map(w=>opt(w,WSEL.b)).join("");
   saveW(); drawWeap();
 }
@@ -1120,14 +1132,15 @@ function drawWeap(){
     ["Total affinity",sgn(tot(A)),sgn(tot(B)),hi(tot(A),tot(B))],
     ["Sharpness",A.sh||"—",B.sh||"—",A.sh&&B.sh?hi(shN(A),shN(B)):["",""]],
     ["Rarity",esc(A.r),esc(B.r),["",""]],
+    ...(A.apex||B.apex?[["Apex (Ruger Aidal)",A.apex?"Element picked when crafting; awakening effects not included":"—",B.apex?"Element picked when crafting; awakening effects not included":"—",["",""]]]:[]),
     ["Element skill from your armor",elemTxt(A),elemTxt(B),["",""]]];
-  tb.innerHTML=`<tr><th></th><th class="wname">${esc(A.n)}</th><th class="wname">${esc(B.n)}</th></tr>`+
+  tb.innerHTML=`<tr><th></th><th class="wname">${esc(wName(A))}</th><th class="wname">${esc(wName(B))}</th></tr>`+
     rows.map(([l,a,b,c])=>`<tr><td>${l}</td><td class="${c[0]}">${a}</td><td class="${c[1]}">${b}</td></tr>`).join("");
   const sum=[]; const d1=wBase(A)-wBase(B), d2=wEl(A)-wEl(B), d3=wTotal(A)-wTotal(B), dt=tot(A)-tot(B);
-  if(same&&d1) sum.push(`Attack: <strong>${esc(d1>0?A.n:B.n)}</strong> is higher by ${Math.abs(d1)}`);
-  if(same&&d2) sum.push(`Element attack: <strong>${esc(d2>0?A.n:B.n)}</strong> is higher by ${Math.abs(d2)}`);
-  if(same&&d3) sum.push(`Total: <strong>${esc(d3>0?A.n:B.n)}</strong> is higher by ${Math.abs(d3)}`);
-  if(dt) sum.push(`Total affinity: <strong>${esc(dt>0?A.n:B.n)}</strong> is higher by ${Math.abs(dt)}%`);
+  if(same&&d1) sum.push(`Attack: <strong>${esc(wName(d1>0?A:B))}</strong> is higher by ${Math.abs(d1)}`);
+  if(same&&d2) sum.push(`Element attack: <strong>${esc(wName(d2>0?A:B))}</strong> is higher by ${Math.abs(d2)}`);
+  if(same&&d3) sum.push(`Total: <strong>${esc(wName(d3>0?A:B))}</strong> is higher by ${Math.abs(d3)}`);
+  if(dt) sum.push(`Total affinity: <strong>${esc(wName(dt>0?A:B))}</strong> is higher by ${Math.abs(dt)}%`);
   if(!same) sum.push(`One is Raw and one is not. Raw weapons put everything into attack (no element), so compare weapons of the same element.`);
   $("wsum").innerHTML=sum.join("<br>")||"These two weapons have the same numbers.";
   const off=Object.entries(ev.tot).filter(([s])=>catOf(s)==="off"&&!ELEM[s]&&s!=="Insight"&&s!=="Critical Element").sort((x,y)=>y[1]-x[1]).slice(0,12);
@@ -1135,6 +1148,7 @@ function drawWeap(){
   $("warmor").innerHTML=(off.length||ce)?`<span class="lbl">Also from your armor (same for both weapons)</span>`+ce+off.map(([s,l])=>`<div>${catDot(s)}${esc(s)} Lv${l}: ${esc(effect(s,l))}</div>`).join(""):`<span class="note">Your loadout has no other offensive skills yet.</span>`;
 }
 $("wtype").onchange=()=>{WSEL.t=$("wtype").value; WSEL.e=null; WSEL.a=-1; WSEL.b=-1; fillWeap()};
+$("wae").onchange=()=>{WSEL.ae=$("wae").value; fillWeap()};
 $("welem").onchange=()=>{WSEL.e=$("welem").value; WSEL.a=-1; WSEL.b=-1; fillWeap()};
 $("wa").onchange=()=>{WSEL.a=+$("wa").value; if(WSEL.b===WSEL.a){const o=wList().find(w=>w.i!==WSEL.a); if(o) WSEL.b=o.i} fillWeap()};
 $("wb").onchange=()=>{WSEL.b=+$("wb").value; if(WSEL.a===WSEL.b){const o=wList().find(w=>w.i!==WSEL.b); if(o) WSEL.a=o.i} fillWeap()};
