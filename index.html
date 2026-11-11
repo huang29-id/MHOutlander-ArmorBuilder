@@ -180,6 +180,24 @@ tr.cur td{background:var(--accent-soft)}
 .vslot .vname{flex:1 1 180px}
 .vslot input[type=number]{width:76px}
 .vslot .vlbl{font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.vcard{grid-template-columns:104px minmax(0,1fr);column-gap:12px;align-items:start}
+.vcard>.vgrid{grid-column:1/-1}
+.vleft{display:grid;gap:4px;justify-items:stretch}
+.vtile{flex-direction:column;justify-content:center;text-align:center;gap:6px;padding:10px 6px;min-height:100px}
+.vtile .vico{--s:56px}
+/* quality colours behind the visage: Rare blue, Epic purple, Superior gold */
+.vtile.vq0{--qc:#4f8fe8} .vtile.vq1{--qc:#a066e8} .vtile.vq2{--qc:#e0a63a}
+.vtile[class*=vq]{border-color:var(--qc);background:linear-gradient(180deg,color-mix(in srgb,var(--qc) 30%,transparent),color-mix(in srgb,var(--qc) 8%,transparent))}
+.vtile[class*=vq] .vico{box-shadow:0 0 0 2px var(--qc),0 0 14px color-mix(in srgb,var(--qc) 55%,transparent)}
+.vtile[class*=vq] .vtc{color:var(--qc);font-weight:600}
+.vtile .vtc{font-weight:400;font-size:.7rem;color:var(--muted);margin-top:-4px}
+.vleft .vlbl{white-space:nowrap}
+.vtile .vtn{font-size:.8rem;line-height:1.2;overflow-wrap:anywhere}
+.vright{display:grid;gap:6px;align-content:start;min-width:0}
+.vright .vrow>.vlbl{min-width:58px}
+.vhint{margin:0;font-size:.82rem;color:var(--muted);align-self:center}
+.vempty .vright{align-self:center}
+@media (max-width:640px){ .vcard{grid-template-columns:84px minmax(0,1fr);column-gap:10px} .vtile .vico{--s:48px} .vright .vrow>.vlbl{min-width:0;width:100%} }
 .vslot details summary{cursor:pointer;font-size:.85rem;color:var(--muted)}
 .vslot .vcore{font-size:.82rem;color:var(--muted)}
 .vsets{display:grid;gap:4px;font-size:.88rem}
@@ -1311,22 +1329,21 @@ function drawVis(){
   const vc=$("vcost"); vc.textContent=`Cost ${used} / 12`; vc.classList.toggle("over",used>12);
   $("vhm").checked=!!VST.hm;
   const left=i=>12-VST.slots.reduce((a,sl,j)=>a+(j===i?0:(visOf(sl.v)?.c||0)),0);
-  const pick=(i,V)=>`<button type="button" class="vpick" data-i="${i}" data-act="open" aria-expanded="${VOPEN===i}">${V?vIcon(V.n):`<span class="vico vnone">+</span>`}<span>${V?esc(V.n):"Choose visage"}</span></button>`+(VOPEN===i?`<div class="vgrid">${V?`<button type="button" class="vcell" data-i="${i}" data-pick=""><span class="vico vnone">×</span><span>Remove</span></button>`:""}${[4,3,1].map(c=>`<div class="vgh">Cost ${c}${c>left(i)?" · over 12":""}</div>`+VIS.filter(x=>x.c===c).map(x=>`<button type="button" class="vcell${x.n===(V&&V.n)?" on":""}${c>left(i)?" over":""}" data-i="${i}" data-pick="${esc(x.n)}">${vIcon(x.n)}<span>${esc(x.n.replace("Radiant ","R. "))}</span></button>`).join("")).join("")}</div>`:"");
+  const tile=(i,V)=>`<div class="vleft"><span class="vlbl">${i?"Slot "+(i+1):"Core"}</span><button type="button" class="vpick vtile${V?" vq"+(+VST.slots[i].q||0):""}" data-i="${i}" data-act="open" aria-expanded="${VOPEN===i}" title="${V?"Change visage":"Choose visage"}">${V?vIcon(V.n):`<span class="vico vnone">+</span>`}<span class="vtn">${V?esc(V.n):"Choose visage"}</span>${V?`<small class="vtc">${QUAL[+VST.slots[i].q||0]} · Cost ${V.c}</small>`:""}</button></div>`;
+  const grid=(i,V)=>(VOPEN===i?`<div class="vgrid">${V?`<button type="button" class="vcell" data-i="${i}" data-pick=""><span class="vico vnone">×</span><span>Remove</span></button>`:""}${[4,3,1].map(c=>`<div class="vgh">Cost ${c}${c>left(i)?" · over 12":""}</div>`+VIS.filter(x=>x.c===c).map(x=>`<button type="button" class="vcell${x.n===(V&&V.n)?" on":""}${c>left(i)?" over":""}" data-i="${i}" data-pick="${esc(x.n)}">${vIcon(x.n)}<span>${esc(x.n.replace("Radiant ","R. "))}</span></button>`).join("")).join("")}</div>`:"");
   $("vslots").innerHTML=VST.slots.map((sl,i)=>{ const V=visOf(sl.v);
-    if(!V) return `<div class="vslot"><div class="vrow"><span class="vlbl">${i?"Slot "+(i+1):"Core"}</span></div>${pick(i,null)}</div>`;
+    if(!V) return `<div class="vslot vcard vempty">${tile(i,null)}<div class="vright"><p class="vhint">Empty slot. Tap the tile to pick a visage.</p></div>${grid(i,null)}</div>`;
     if(!V.inks.includes(sl.ink)) sl.ink=V.inks[0];
     const mains=vMains(V); if(!mains.some(m=>m[0]===sl.m)){ sl.m=mains[0][0]; sl.mv=mains[0][2] }
     const mvSel=(f,key,cur,lab)=>{ const m=mains.find(x=>x[0]===key)||mains[0]; return m[3]==null?`<span class="vmv" title="Fixed main stat at visage Lv10">+${m[2]}% <small>Lv10</small></span>`:rollSel(`data-i="${i}" data-f="${f}" aria-label="${lab} at Lv10"`,m[3],m[2],cur) };
     if(VMAINX[V.n]){ sl.mv=(mains.find(m=>m[0]===sl.m)||mains[0])[2] }
     const subs=[0,1,2,3,4].map(j=>{const sb=sl.subs[j]||{t:"",v:0}; return `<div class="vrow"><select data-i="${i}" data-f="st" data-j="${j}" aria-label="Substat ${j+1}"><option value="">— substat ${j+1} —</option>${VSUB.map(([k,n])=>`<option value="${k}"${k===sb.t?" selected":""}>${n}</option>`).join("")}</select>${sb.t?(()=>{const d=VSUB.find(x=>x[0]===sb.t); return rollSel(`data-i="${i}" data-f="sv" data-j="${j}" aria-label="Substat ${j+1} roll"`,d[3][+sl.q||0],d[2][+sl.q||0],sb.v)})():""}</div>`}).join("");
-    return `<div class="vslot"><div class="vrow"><span class="vlbl">${i?"Slot "+(i+1):"Core"} · cost ${V.c}</span></div>${pick(i,V)}
-      <div class="vrow"><select data-i="${i}" data-f="ink" aria-label="Ink">${V.inks.map(k=>`<option${k===sl.ink?" selected":""}>${k}</option>`).join("")}</select>
-      <select data-i="${i}" data-f="m" aria-label="Main stat">${mains.map(([k,n])=>`<option value="${k}"${k===sl.m?" selected":""}>${n}</option>`).join("")}</select>
-      ${mvSel("mv",sl.m,sl.mv,"Main stat")}
-      <select data-i="${i}" data-f="q" aria-label="Quality">${QUAL.map((q,k)=>`<option value="${k}"${k===+sl.q?" selected":""}>${q}</option>`).join("")}</select></div>
+    return `<div class="vslot vcard">${tile(i,V)}<div class="vright">
+      <div class="vrow"><span class="vlbl">Ink</span><select data-i="${i}" data-f="ink" aria-label="Ink">${V.inks.map(k=>`<option${k===sl.ink?" selected":""}>${k}</option>`).join("")}</select><select data-i="${i}" data-f="q" aria-label="Quality">${QUAL.map((q,k)=>`<option value="${k}"${k===+sl.q?" selected":""}>${q}</option>`).join("")}</select></div>
+      <div class="vrow"><span class="vlbl">Main</span><select data-i="${i}" data-f="m" aria-label="Main stat">${mains.map(([k,n])=>`<option value="${k}"${k===sl.m?" selected":""}>${n}</option>`).join("")}</select>${mvSel("mv",sl.m,sl.mv,"Main stat")}</div>
       ${+sl.q>=1?(()=>{ const m2=mains; if(!m2.some(m=>m[0]===sl.m2)){ sl.m2=sl.m; sl.mv2=(m2.find(m=>m[0]===sl.m2)||m2[0])[2] } if(VMAINX[V.n]) sl.mv2=(m2.find(m=>m[0]===sl.m2)||m2[0])[2]; return `<div class="vrow"><span class="vlbl">2nd main</span><select data-i="${i}" data-f="m2" aria-label="Second main stat">${m2.map(([k,n])=>`<option value="${k}"${k===sl.m2?" selected":""}>${n}</option>`).join("")}</select>${mvSel("mv2",sl.m2,sl.mv2,"Second main stat")}</div>`})():""}
       ${i===0?`<div class="vcore">Core effect: ${V.core?esc(V.core):"none"}</div>`:""}
-      <details${sl.subs.some(x=>x&&x.t)?" open":""}><summary>Substats (${sl.subs.filter(x=>x&&x.t).length}/5)</summary>${subs}</details></div>`}).join("");
+      <details${sl.subs.some(x=>x&&x.t)?" open":""}><summary>Substats (${sl.subs.filter(x=>x&&x.t).length}/5)</summary>${subs}</details></div>${grid(i,V)}</div>`}).join("");
   $("vslots").querySelectorAll("[data-act=open]").forEach(b=>b.onclick=()=>{const i=+b.dataset.i; VOPEN=VOPEN===i?-1:i; drawVis()});
   $("vslots").querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>{const sl=VST.slots[+b.dataset.i]; Object.assign(sl,newVSlot(),{v:b.dataset.pick}); VOPEN=-1; saveV(); drawVis()});
   $("vslots").querySelectorAll("[data-f]").forEach(el=>el.addEventListener(el.tagName==="INPUT"?"input":"change",()=>{
